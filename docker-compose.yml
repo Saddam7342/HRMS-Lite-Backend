@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  hrms-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourStrong@Password123
+    ports:
+      - "1433:1433"
+    volumes:
+      - hrms-db-data:/var/opt/mssql
+
+  hrms-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=hrms-db;Database=HRMS_Production;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True;
+      - JwtSettings__Secret=Your_Super_Secret_Production_Key_32_Chars_Long
+      - JwtSettings__Issuer=HRMS-Platform
+      - JwtSettings__Audience=HRMS-Clients
+    ports:
+      - "8080:8080"
+    depends_on:
+      - hrms-db
+    volumes:
+      - ./uploads:/app/wwwroot/uploads
+
+volumes:
+  hrms-db-data:

@@ -1,0 +1,188 @@
+
+<style>
+#erd { padding: 0.5rem 0; }
+#erd svg { max-width: 100%; }
+</style>
+<div id="erd"></div>
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+await document.fonts.ready;
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  fontFamily: '"Anthropic Sans", sans-serif',
+  themeVariables: {
+    darkMode: dark,
+    fontSize: '13px',
+    fontFamily: '"Anthropic Sans", sans-serif',
+    lineColor: dark ? '#9c9a92' : '#73726c',
+    textColor: dark ? '#c2c0b6' : '#3d3d3a',
+  },
+});
+const diagram = `erDiagram
+  TENANTS {
+    uuid Id PK
+    string CompanyName
+    string LogoUrl
+    string ThemeColor
+    int MaxEmployeeSlots
+    int UsedEmployeeSlots
+    bool IsActive
+    datetime CreatedAt
+  }
+  USERS {
+    uuid Id PK
+    uuid TenantId FK
+    uuid RoleId FK
+    string Email
+    string PasswordHash
+    bool IsFirstLogin
+    bool IsActive
+    datetime CreatedAt
+  }
+  ROLES {
+    uuid Id PK
+    string Name
+    string Description
+  }
+  DEPARTMENTS {
+    uuid Id PK
+    uuid TenantId FK
+    uuid ManagerId FK
+    string Name
+  }
+  EMPLOYEE_PROFILES {
+    uuid Id PK
+    uuid UserId FK
+    uuid TenantId FK
+    uuid DepartmentId FK
+    uuid ManagerId FK
+    string FirstName
+    string LastName
+    string Phone
+    string ProfileImageUrl
+    string Gender
+    string JobTitle
+    datetime HiredAt
+  }
+  LEAVE_POLICIES {
+    uuid Id PK
+    uuid TenantId FK
+    string LeaveType
+    int DaysAllowed
+    string ApplicableGender
+  }
+  LEAVE_REQUESTS {
+    uuid Id PK
+    uuid EmployeeId FK
+    uuid TenantId FK
+    string LeaveType
+    date StartDate
+    date EndDate
+    string Reason
+    string Status
+    uuid ApprovedById FK
+    string RejectedReason
+    datetime CreatedAt
+  }
+  EXPENSE_CLAIMS {
+    uuid Id PK
+    uuid EmployeeId FK
+    uuid TenantId FK
+    string ClaimType
+    decimal Amount
+    string Description
+    string Status
+    uuid ReviewedById FK
+    datetime SubmittedAt
+  }
+  TRAVEL_REQUESTS {
+    uuid Id PK
+    uuid EmployeeId FK
+    uuid TenantId FK
+    string Destination
+    string Purpose
+    date StartDate
+    date EndDate
+    string Notes
+    string Status
+    uuid ReviewedById FK
+  }
+  ATTENDANCE_LOGS {
+    uuid Id PK
+    uuid EmployeeId FK
+    uuid TenantId FK
+    date Date
+    datetime CheckInTime
+    datetime CheckOutTime
+    string Status
+  }
+  NOTIFICATIONS {
+    uuid Id PK
+    uuid UserId FK
+    uuid TenantId FK
+    string Title
+    string Message
+    string Type
+    bool IsRead
+    datetime CreatedAt
+  }
+  REFRESH_TOKENS {
+    uuid Id PK
+    uuid UserId FK
+    string Token
+    datetime ExpiresAt
+    bool IsRevoked
+  }
+  ACTIVITY_LOGS {
+    uuid Id PK
+    uuid UserId FK
+    uuid TenantId FK
+    string Action
+    string EntityType
+    string EntityId
+    datetime CreatedAt
+  }
+
+  TENANTS ||--o{ USERS : "has"
+  TENANTS ||--o{ DEPARTMENTS : "owns"
+  TENANTS ||--o{ EMPLOYEE_PROFILES : "employs"
+  TENANTS ||--o{ LEAVE_POLICIES : "configures"
+  TENANTS ||--o{ LEAVE_REQUESTS : "scoped to"
+  TENANTS ||--o{ EXPENSE_CLAIMS : "scoped to"
+  TENANTS ||--o{ TRAVEL_REQUESTS : "scoped to"
+  TENANTS ||--o{ ATTENDANCE_LOGS : "scoped to"
+  TENANTS ||--o{ NOTIFICATIONS : "scoped to"
+  TENANTS ||--o{ ACTIVITY_LOGS : "scoped to"
+  USERS ||--|| EMPLOYEE_PROFILES : "has profile"
+  USERS ||--o{ REFRESH_TOKENS : "holds"
+  USERS ||--o{ NOTIFICATIONS : "receives"
+  USERS ||--o{ ACTIVITY_LOGS : "generates"
+  ROLES ||--o{ USERS : "assigned to"
+  DEPARTMENTS ||--o{ EMPLOYEE_PROFILES : "groups"
+  EMPLOYEE_PROFILES ||--o{ LEAVE_REQUESTS : "submits"
+  EMPLOYEE_PROFILES ||--o{ EXPENSE_CLAIMS : "submits"
+  EMPLOYEE_PROFILES ||--o{ TRAVEL_REQUESTS : "submits"
+  EMPLOYEE_PROFILES ||--o{ ATTENDANCE_LOGS : "has"
+`;
+const { svg } = await mermaid.render('erd-svg', diagram);
+document.getElementById('erd').innerHTML = svg;
+
+document.querySelectorAll('#erd svg .node').forEach(node => {
+  const fp = node.querySelector('path[d]');
+  if (!fp) return;
+  const nums = fp.getAttribute('d').match(/-?[\d.]+/g)?.map(Number);
+  if (!nums || nums.length < 8) return;
+  const xs = [nums[0],nums[2],nums[4],nums[6]], ys = [nums[1],nums[3],nums[5],nums[7]];
+  const x=Math.min(...xs),y=Math.min(...ys),w=Math.max(...xs)-x,h=Math.max(...ys)-y;
+  const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  ['x','y','width','height'].forEach((a,i)=>rect.setAttribute(a,[x,y,w,h][i]));
+  rect.setAttribute('rx','8');
+  for (const a of ['fill','stroke','stroke-width','class','style']) {
+    if (fp.hasAttribute(a)) rect.setAttribute(a, fp.getAttribute(a));
+  }
+  fp.replaceWith(rect);
+});
+document.querySelectorAll('#erd svg .row-rect-odd path, #erd svg .row-rect-even path').forEach(p => p.setAttribute('stroke','none'));
+</script>

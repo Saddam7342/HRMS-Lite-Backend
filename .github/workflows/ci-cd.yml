@@ -1,0 +1,40 @@
+name: Build and Deploy HRMS API
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 9.0.x
+        
+    - name: Restore dependencies
+      run: dotnet restore HRMS.sln
+      
+    - name: Build
+      run: dotnet build HRMS.sln --no-restore -c Release
+      
+    - name: Test
+      run: dotnet test HRMS.sln --no-build --verbosity normal
+
+    - name: Publish
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: dotnet publish src/HRMS.API/HRMS.API.csproj -c Release -o ./publish
+
+    - name: Build and Push Docker Image
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: false # Set to true and add registry login for real deployment
+        tags: hrms-api:latest
