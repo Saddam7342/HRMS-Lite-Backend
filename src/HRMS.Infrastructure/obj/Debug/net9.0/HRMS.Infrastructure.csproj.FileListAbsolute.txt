@@ -17,3 +17,4 @@ C:\Users\Technupur PC1\Documents\HRMS\src\HRMS.Infrastructure\obj\Debug\net9.0\H
 C:\Users\Technupur PC1\Documents\HRMS\src\HRMS.Infrastructure\obj\Debug\net9.0\refint\HRMS.Infrastructure.dll
 C:\Users\Technupur PC1\Documents\HRMS\src\HRMS.Infrastructure\obj\Debug\net9.0\HRMS.Infrastructure.pdb
 C:\Users\Technupur PC1\Documents\HRMS\src\HRMS.Infrastructure\obj\Debug\net9.0\ref\HRMS.Infrastructure.dll
+C:\Users\Technupur PC1\Documents\HRMS\src\HRMS.Infrastructure\obj\Debug\net9.0\HRMS.Infrastructure.sourcelink.json

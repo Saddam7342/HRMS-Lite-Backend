@@ -10,3 +10,4 @@ C:\Users\Technupur PC1\Documents\HRMS\src\HRMS.Domain\obj\Debug\net9.0\refint\HR
 C:\Users\Technupur PC1\Documents\HRMS\src\HRMS.Domain\obj\Debug\net9.0\HRMS.Domain.pdb
 C:\Users\Technupur PC1\Documents\HRMS\src\HRMS.Domain\obj\Debug\net9.0\ref\HRMS.Domain.dll
 C:\Users\Technupur PC1\Documents\HRMS\src\HRMS.Domain\obj\Debug\net9.0\HRMS.Domain.csproj.AssemblyReference.cache
+C:\Users\Technupur PC1\Documents\HRMS\src\HRMS.Domain\obj\Debug\net9.0\HRMS.Domain.sourcelink.json

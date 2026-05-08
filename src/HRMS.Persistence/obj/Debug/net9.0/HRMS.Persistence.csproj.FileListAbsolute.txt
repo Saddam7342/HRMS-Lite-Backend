@@ -19,3 +19,4 @@ C:\Users\Technupur PC1\Documents\HRMS\src\HRMS.Persistence\obj\Debug\net9.0\refi
 C:\Users\Technupur PC1\Documents\HRMS\src\HRMS.Persistence\obj\Debug\net9.0\HRMS.Persistence.pdb
 C:\Users\Technupur PC1\Documents\HRMS\src\HRMS.Persistence\obj\Debug\net9.0\HRMS.Persistence.genruntimeconfig.cache
 C:\Users\Technupur PC1\Documents\HRMS\src\HRMS.Persistence\obj\Debug\net9.0\ref\HRMS.Persistence.dll
+C:\Users\Technupur PC1\Documents\HRMS\src\HRMS.Persistence\obj\Debug\net9.0\HRMS.Persistence.sourcelink.json
