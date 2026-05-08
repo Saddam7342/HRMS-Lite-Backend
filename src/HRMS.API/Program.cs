@@ -114,9 +114,27 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var applyMigrations = builder.Configuration.GetValue<bool>("ApplyMigrationsAtStartup", defaultValue: true);
     
-    if (applyMigrations && context.Database.GetPendingMigrations().Any())
+    if (applyMigrations)
     {
-        context.Database.Migrate();
+        int retryCount = 0;
+        while (retryCount < 5)
+        {
+            try
+            {
+                if (context.Database.GetPendingMigrations().Any())
+                {
+                    context.Database.Migrate();
+                }
+                break;
+            }
+            catch (Microsoft.Data.SqlClient.SqlException)
+            {
+                retryCount++;
+                if (retryCount >= 5) throw;
+                Log.Warning("Database not ready, retrying in 5 seconds... (Attempt {RetryCount})", retryCount);
+                await Task.Delay(5000);
+            }
+        }
     }
     await IdentitySeeder.SeedAsync(app.Services);
 }
