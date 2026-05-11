@@ -166,10 +166,16 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<RateLimitingMiddleware>();
 
-if (app.Environment.IsDevelopment())
+// Enable Swagger in Development OR if ShowSwagger is true in config
+var showSwagger = builder.Configuration.GetValue<bool>("ShowSwagger", defaultValue: false);
+if (app.Environment.IsDevelopment() || showSwagger)
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "HRMS API V1");
+        c.RoutePrefix = "swagger"; // This ensures it's at /swagger
+    });
 }
 
 app.UseSerilogRequestLogging();
