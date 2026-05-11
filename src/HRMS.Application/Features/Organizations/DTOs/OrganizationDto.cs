@@ -15,6 +15,7 @@ public record OrganizationDto(
     DateTime CreatedAt);
 
 public record OrganizationBrandingDto(
+    Guid Id,
     string Name,
     string? LogoUrl,
     string? PrimaryColor,
