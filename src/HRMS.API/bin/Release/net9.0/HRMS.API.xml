@@ -1,0 +1,163 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>HRMS.API</name>
+    </assembly>
+    <members>
+        <member name="M:HRMS.API.Controllers.AuthController.Login(HRMS.Application.Features.Auth.Commands.Login.LoginCommand)">
+            <summary>
+            Authenticates a user and returns a JWT token pair.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.AuthController.Refresh(HRMS.Application.Features.Auth.Commands.Refresh.RefreshTokenCommand)">
+            <summary>
+            Refreshes an expired access token using a valid refresh token.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.AuthController.Logout(HRMS.Application.Features.Auth.Commands.Account.LogoutCommand)">
+            <summary>
+            Revokes the current refresh token and logs out the user.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.AuthController.ChangePassword(HRMS.Application.Features.Auth.Commands.Account.ChangePasswordCommand)">
+            <summary>
+            Changes the password of the currently authenticated user.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.AuthController.GetMe">
+            <summary>
+            Gets the profile of the currently authenticated user.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.DepartmentsController.Create(HRMS.Application.Features.Departments.Commands.Create.CreateDepartmentCommand)">
+            <summary>
+            Creates a new department within the organization.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.DepartmentsController.GetAll">
+            <summary>
+            Gets all departments in the organization.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.DepartmentsController.GetHierarchy">
+            <summary>
+            Gets a full hierarchical tree of the organization's departments.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.DepartmentsController.GetById(System.Guid)">
+            <summary>
+            Gets a specific department's details by ID.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.DepartmentsController.Update(System.Guid,HRMS.Application.Features.Departments.Commands.Update.UpdateDepartmentCommand)">
+            <summary>
+            Updates a department's details. Prevents circular references.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.DepartmentsController.Delete(System.Guid)">
+            <summary>
+            Deletes a department if no employees are assigned to it.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.DepartmentsController.Activate(System.Guid)">
+            <summary>
+            Activates a department.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.DepartmentsController.Deactivate(System.Guid)">
+            <summary>
+            Deactivates a department.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.DepartmentsController.GetEmployees(System.Guid)">
+            <summary>
+            Gets the list of employees assigned to a specific department.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.EmployeesController.Create(HRMS.Application.Features.Employees.Commands.CreateEmployee.CreateEmployeeCommand)">
+            <summary>
+            Onboards a new employee. Creates AppUser and Employee profile.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.EmployeesController.GetAll(HRMS.Shared.Models.PaginationParams)">
+            <summary>
+            Gets a paged list of all employees in the organization.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.EmployeesController.GetMe">
+            <summary>
+            Gets the profile of the currently authenticated employee.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.EmployeesController.GetById(System.Guid)">
+            <summary>
+            Gets a specific employee's profile by ID.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.EmployeesController.Update(System.Guid,HRMS.Application.Features.Employees.Commands.UpdateEmployee.UpdateEmployeeCommand)">
+            <summary>
+            Updates an employee's profile details.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.EmployeesController.Activate(System.Guid)">
+            <summary>
+            Activates an employee's account and profile.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.EmployeesController.Deactivate(System.Guid)">
+            <summary>
+            Deactivates an employee's account and profile.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.EmployeesController.GetMyTeam">
+            <summary>
+            Gets the list of employees reporting to a specific manager.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.EmployeesController.UploadImage(System.Guid,Microsoft.AspNetCore.Http.IFormFile)">
+            <summary>
+            Uploads a profile image for an employee.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.OrganizationsController.Create(HRMS.Application.Features.Organizations.Commands.CreateOrganization.CreateOrganizationCommand)">
+            <summary>
+            Creates a new organization (tenant).
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.OrganizationsController.GetAll">
+            <summary>
+            Gets all organizations.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.OrganizationsController.GetById(System.Guid)">
+            <summary>
+            Gets organization details by ID.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.OrganizationsController.Update(System.Guid,HRMS.Application.Features.Organizations.Commands.UpdateOrganization.UpdateOrganizationCommand)">
+            <summary>
+            Updates organization details.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.OrganizationsController.Activate(System.Guid)">
+            <summary>
+            Activates an organization.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.OrganizationsController.Deactivate(System.Guid)">
+            <summary>
+            Deactivates an organization.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.OrganizationsController.UploadLogo(System.Guid,Microsoft.AspNetCore.Http.IFormFile)">
+            <summary>
+            Uploads an organization logo.
+            </summary>
+        </member>
+        <member name="M:HRMS.API.Controllers.OrganizationsController.GetBranding(System.String)">
+            <summary>
+            Gets branding settings by organization slug.
+            </summary>
+        </member>
+    </members>
+</doc>

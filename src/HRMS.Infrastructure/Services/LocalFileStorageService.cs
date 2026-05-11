@@ -1,6 +1,7 @@
 using HRMS.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
 
 namespace HRMS.Infrastructure.Services;
 
