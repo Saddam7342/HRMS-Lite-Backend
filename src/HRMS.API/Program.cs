@@ -104,7 +104,8 @@ builder.Services.AddAuthorization(options =>
 
 // --- Health Checks ---
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<AppDbContext>();
+    .AddDbContextCheck<AppDbContext>(name: "SQL Server")
+    .AddCheck("Memory Cache", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy());
 
 var app = builder.Build();
 
@@ -112,10 +113,14 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    var applyMigrations = builder.Configuration.GetValue<bool>("ApplyMigrationsAtStartup", defaultValue: true);
     
-    if (applyMigrations)
+    // ONLY apply migrations automatically in Development OR if explicitly forced via env var
+    var isDevelopment = app.Environment.IsDevelopment();
+    var forceMigration = builder.Configuration.GetValue<bool>("ApplyMigrationsAtStartup", defaultValue: false);
+    
+    if (isDevelopment || forceMigration)
     {
+        Log.Information("Applying migrations (Environment: {Env}, Forced: {Forced})...", app.Environment.EnvironmentName, forceMigration);
         int retryCount = 0;
         while (retryCount < 5)
         {
@@ -127,16 +132,32 @@ using (var scope = app.Services.CreateScope())
                 }
                 break;
             }
-            catch (Microsoft.Data.SqlClient.SqlException)
+            catch (Microsoft.Data.SqlClient.SqlException ex)
             {
                 retryCount++;
-                if (retryCount >= 5) throw;
-                Log.Warning("Database not ready, retrying in 5 seconds... (Attempt {RetryCount})", retryCount);
+                if (retryCount >= 5) 
+                {
+                    Log.Fatal(ex, "Database migration failed after multiple retries.");
+                    throw;
+                }
+                Log.Warning("Database not ready, retrying in 5 seconds... (Attempt {RetryCount}/5)", retryCount);
                 await Task.Delay(5000);
             }
         }
     }
-    await IdentitySeeder.SeedAsync(app.Services);
+    else
+    {
+        Log.Information("Auto-migration skipped in {Env} environment.", app.Environment.EnvironmentName);
+    }
+    
+    try 
+    {
+        await IdentitySeeder.SeedAsync(app.Services);
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "Seeding failed but application will continue to start.");
+    }
 }
 
 // --- Middleware Pipeline ---
@@ -152,6 +173,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseSerilogRequestLogging();
 app.UseStaticFiles();
+
+// Recommended: Move HttpsRedirection higher or ensure it's not breaking health checks
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
@@ -160,7 +183,28 @@ app.UseMiddleware<FeatureFlagMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHealthChecks("/health");
+
+// Optimized Health Check Output
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var response = new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.Select(x => new
+            {
+                name = x.Key,
+                status = x.Value.Status.ToString(),
+                description = x.Value.Description,
+                duration = x.Value.Duration.TotalMilliseconds
+            }),
+            totalDuration = report.TotalDuration.TotalMilliseconds
+        };
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response, new JsonSerializerOptions { WriteIndented = true }));
+    }
+});
 
 try
 {

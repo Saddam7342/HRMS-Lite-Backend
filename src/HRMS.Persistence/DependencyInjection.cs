@@ -19,7 +19,14 @@ public static class DependencyInjection
         services.AddScoped<ISaveChangesInterceptor, AuditLogInterceptor>();
 
         services.AddDbContext<AppDbContext>((sp, options) => {
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            options.UseSqlServer(connectionString, sqlOptions => {
+                sqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(30),
+                    errorNumbersToAdd: null);
+                sqlOptions.CommandTimeout(60); // 60 seconds
+            });
             options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
         });
 
