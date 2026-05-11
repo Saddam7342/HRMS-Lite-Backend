@@ -82,6 +82,7 @@ public class LoginHandler(
             "User logged in successfully.", 
             null, 
             new { user.Email, user.LastLoginAt }, 
+            user.OrganizationId,
             cancellationToken);
 
         var response = new LoginResponse(

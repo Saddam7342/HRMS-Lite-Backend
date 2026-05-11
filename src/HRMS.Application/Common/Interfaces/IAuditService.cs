@@ -10,6 +10,7 @@ public interface IAuditService
         string entityId, 
         string? message = null, 
         object? oldValues = null, 
-        object? newValues = null, 
+        object? newValues = null,
+        Guid? tenantId = null,
         CancellationToken ct = default);
 }
