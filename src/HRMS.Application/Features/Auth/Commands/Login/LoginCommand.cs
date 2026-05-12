@@ -26,6 +26,8 @@ public class LoginHandler(
     IDateTimeProvider dateTimeProvider,
     IAuditService auditService) : IRequestHandler<LoginCommand, Result<LoginResponse>>
 {
+    public async Task<Result<LoginResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
+    {
         try 
         {
             var user = await unitOfWork.Users.GetWithRolesAndPermissionsAsync(request.EmailOrUsername, cancellationToken);
@@ -121,4 +123,5 @@ public class LoginHandler(
         {
             return Result<LoginResponse>.Failure($"Internal Login Error: {ex.Message}");
         }
+    }
 }

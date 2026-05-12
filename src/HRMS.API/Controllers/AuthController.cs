@@ -6,6 +6,7 @@ using HRMS.Application.Features.Auth.Queries;
 using HRMS.Shared.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 
 namespace HRMS.API.Controllers;
 
