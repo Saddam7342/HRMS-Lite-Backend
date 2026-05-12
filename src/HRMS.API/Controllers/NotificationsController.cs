@@ -14,7 +14,7 @@ public class NotificationsController : BaseApiController
     public async Task<IActionResult> GetMyNotifications([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var result = await Mediator.Send(new GetMyNotificationsQuery(page, pageSize));
-        return Ok(ApiResponse<IReadOnlyList<NotificationDto>>.Ok(result.Data!));
+        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpGet("count")]
@@ -54,7 +54,7 @@ public class NotificationsController : BaseApiController
     public async Task<IActionResult> GetPreferences()
     {
         var result = await Mediator.Send(new GetNotificationPreferencesQuery());
-        return Ok(ApiResponse<NotificationPreferencesDto>.Ok(result.Data!));
+        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpPut("preferences")]

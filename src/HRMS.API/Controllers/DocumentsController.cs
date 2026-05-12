@@ -37,14 +37,14 @@ public class DocumentsController : BaseApiController
     public async Task<IActionResult> GetByEmployee(Guid employeeId)
     {
         var result = await Mediator.Send(new GetEmployeeDocumentsQuery(employeeId));
-        return Ok(ApiResponse<IReadOnlyList<DocumentDto>>.Ok(result.Data!));
+        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpGet("company")]
     public async Task<IActionResult> GetCompanyDocuments()
     {
         var result = await Mediator.Send(new GetCompanyDocumentsQuery());
-        return Ok(ApiResponse<IReadOnlyList<DocumentDto>>.Ok(result.Data!));
+        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpGet("{id}/download")]

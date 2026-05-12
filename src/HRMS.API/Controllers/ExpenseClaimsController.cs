@@ -24,7 +24,7 @@ public class ExpenseClaimsController : BaseApiController
     public async Task<IActionResult> GetMyClaims()
     {
         var result = await Mediator.Send(new GetMyExpenseClaimsQuery());
-        return Ok(ApiResponse<IReadOnlyList<ExpenseClaimDto>>.Ok(result.Data!));
+        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpGet("{id}")]
@@ -40,7 +40,7 @@ public class ExpenseClaimsController : BaseApiController
     public async Task<IActionResult> GetPendingApprovals()
     {
         var result = await Mediator.Send(new GetPendingExpenseApprovalsQuery());
-        return Ok(ApiResponse<IReadOnlyList<ExpenseClaimDto>>.Ok(result.Data!));
+        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpGet("team")]
@@ -48,7 +48,7 @@ public class ExpenseClaimsController : BaseApiController
     public async Task<IActionResult> GetTeamClaims()
     {
         var result = await Mediator.Send(new GetTeamExpenseClaimsQuery());
-        return Ok(ApiResponse<IReadOnlyList<ExpenseClaimListDto>>.Ok(result.Data!));
+        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpPut("{id}/approve")]
@@ -85,6 +85,6 @@ public class ExpenseClaimsController : BaseApiController
     public async Task<IActionResult> GetCategories()
     {
         var result = await Mediator.Send(new GetExpenseCategoriesQuery());
-        return Ok(ApiResponse<IReadOnlyList<ExpenseCategoryDto>>.Ok(result.Data!));
+        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 }

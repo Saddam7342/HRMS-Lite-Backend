@@ -13,7 +13,7 @@ public class AuditController : BaseApiController
     public async Task<IActionResult> GetEntityHistory(string entityName, string entityId)
     {
         var result = await Mediator.Send(new GetEntityAuditHistoryQuery(entityName, entityId));
-        return Ok(ApiResponse<IReadOnlyList<AuditLogDto>>.Ok(result.Data!));
+        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpGet("user/{userId}")]

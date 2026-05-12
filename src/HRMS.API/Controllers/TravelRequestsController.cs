@@ -24,7 +24,7 @@ public class TravelRequestsController : BaseApiController
     public async Task<IActionResult> GetMyTravels()
     {
         var result = await Mediator.Send(new GetMyTravelRequestsQuery());
-        return Ok(ApiResponse<IReadOnlyList<TravelRequestDto>>.Ok(result.Data!));
+        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpGet("{id}")]
@@ -65,7 +65,7 @@ public class TravelRequestsController : BaseApiController
     public async Task<IActionResult> GetPendingApprovals()
     {
         var result = await Mediator.Send(new GetPendingTravelApprovalsQuery());
-        return Ok(ApiResponse<IReadOnlyList<TravelRequestDto>>.Ok(result.Data!));
+        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpPut("{id}/approve")]
@@ -89,7 +89,7 @@ public class TravelRequestsController : BaseApiController
     public async Task<IActionResult> GetTeamSchedule(DateTime start, DateTime end)
     {
         var result = await Mediator.Send(new GetTeamTravelScheduleQuery(start, end));
-        return Ok(ApiResponse<IReadOnlyList<TeamTravelScheduleDto>>.Ok(result.Data!));
+        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpGet("history")]
@@ -97,6 +97,6 @@ public class TravelRequestsController : BaseApiController
     public async Task<IActionResult> GetHistory()
     {
         var result = await Mediator.Send(new GetTravelHistoryQuery());
-        return Ok(ApiResponse<IReadOnlyList<TravelRequestListDto>>.Ok(result.Data!));
+        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 }
