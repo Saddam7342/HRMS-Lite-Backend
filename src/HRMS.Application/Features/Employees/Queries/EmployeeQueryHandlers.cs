@@ -38,7 +38,7 @@ public class EmployeeQueryHandlers(
             .OrderBy(x => x.LastName);
 
         var paged = await query.ToPagedResultAsync(request.Params.PageNumber, request.Params.PageSize, cancellationToken);
-        var dtos = mapper.Map<IReadOnlyList<EmployeeListDto>>(paged.Items);
+        var dtos = mapper.Map<List<EmployeeListDto>>(paged.Items);
         
         return Result<PagedResult<EmployeeListDto>>.Success(PagedResult<EmployeeListDto>.Create(
             dtos, paged.TotalCount, paged.PageNumber, paged.PageSize));
@@ -60,6 +60,6 @@ public class EmployeeQueryHandlers(
     public async Task<Result<IReadOnlyList<TeamMemberDto>>> Handle(GetTeamMembersQuery request, CancellationToken cancellationToken)
     {
         var reports = await unitOfWork.Employees.GetDirectReportsAsync(request.ManagerId, cancellationToken);
-        return Result<IReadOnlyList<TeamMemberDto>>.Success(mapper.Map<IReadOnlyList<TeamMemberDto>>(reports));
+        return Result<IReadOnlyList<TeamMemberDto>>.Success(mapper.Map<List<TeamMemberDto>>(reports));
     }
 }

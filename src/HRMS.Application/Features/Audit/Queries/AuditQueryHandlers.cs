@@ -29,7 +29,7 @@ public class AuditQueryHandlers(
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        return Result<IReadOnlyList<AuditLogDto>>.Success(mapper.Map<IReadOnlyList<AuditLogDto>>(logs));
+        return Result<IReadOnlyList<AuditLogDto>>.Success(mapper.Map<List<AuditLogDto>>(logs));
     }
 
     public async Task<Result<IReadOnlyList<AuditLogDto>>> Handle(GetUserActivityHistoryQuery request, CancellationToken cancellationToken)
@@ -45,7 +45,7 @@ public class AuditQueryHandlers(
             .Take(request.Limit)
             .ToListAsync(cancellationToken);
 
-        return Result<IReadOnlyList<AuditLogDto>>.Success(mapper.Map<IReadOnlyList<AuditLogDto>>(logs));
+        return Result<IReadOnlyList<AuditLogDto>>.Success(mapper.Map<List<AuditLogDto>>(logs));
     }
 
     public async Task<Result<IReadOnlyList<AuditLogDto>>> Handle(GetSystemAuditLogsQuery request, CancellationToken cancellationToken)
@@ -60,7 +60,7 @@ public class AuditQueryHandlers(
             .Take(request.PageSize)
             .ToListAsync(cancellationToken);
 
-        return Result<IReadOnlyList<AuditLogDto>>.Success(mapper.Map<IReadOnlyList<AuditLogDto>>(logs));
+        return Result<IReadOnlyList<AuditLogDto>>.Success(mapper.Map<List<AuditLogDto>>(logs));
     }
 
     public async Task<Result<AuditLogDto>> Handle(GetAuditLogByIdQuery request, CancellationToken cancellationToken)

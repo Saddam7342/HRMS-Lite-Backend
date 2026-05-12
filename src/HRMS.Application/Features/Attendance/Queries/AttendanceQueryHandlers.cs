@@ -30,7 +30,7 @@ public class AttendanceQueryHandlers(
         if (employee == null) return Result<IReadOnlyList<AttendanceDto>>.Failure("Employee not found.");
 
         var records = await unitOfWork.Attendance.GetByEmployeeAsync(employee.Id, request.StartDate, request.EndDate, cancellationToken);
-        return Result<IReadOnlyList<AttendanceDto>>.Success(mapper.Map<IReadOnlyList<AttendanceDto>>(records));
+        return Result<IReadOnlyList<AttendanceDto>>.Success(mapper.Map<List<AttendanceDto>>(records));
     }
 
     public async Task<Result<AttendanceDto>> Handle(GetTodayAttendanceQuery request, CancellationToken cancellationToken)
@@ -48,7 +48,7 @@ public class AttendanceQueryHandlers(
     {
         // General query for admins
         var records = await unitOfWork.Attendance.GetByEmployeeAsync(Guid.Empty, request.StartDate, request.EndDate, cancellationToken);
-        return Result<IReadOnlyList<AttendanceDto>>.Success(mapper.Map<IReadOnlyList<AttendanceDto>>(records));
+        return Result<IReadOnlyList<AttendanceDto>>.Success(mapper.Map<List<AttendanceDto>>(records));
     }
 
     public async Task<Result<IReadOnlyList<AttendanceListDto>>> Handle(GetTeamAttendanceQuery request, CancellationToken cancellationToken)
@@ -57,7 +57,7 @@ public class AttendanceQueryHandlers(
         if (employee == null) return Result<IReadOnlyList<AttendanceListDto>>.Failure("Employee not found.");
 
         var team = await unitOfWork.Attendance.GetTeamAttendanceAsync(employee.Id, request.Date, cancellationToken);
-        return Result<IReadOnlyList<AttendanceListDto>>.Success(mapper.Map<IReadOnlyList<AttendanceListDto>>(team));
+        return Result<IReadOnlyList<AttendanceListDto>>.Success(mapper.Map<List<AttendanceListDto>>(team));
     }
 
     public async Task<Result<AttendanceSummaryDto>> Handle(GetAttendanceSummaryQuery request, CancellationToken cancellationToken)

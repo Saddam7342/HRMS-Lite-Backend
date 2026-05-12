@@ -24,7 +24,7 @@ public class NotificationQueryHandlers(
         if (!userId.HasValue) return Result<IReadOnlyList<NotificationDto>>.Failure("Unauthorized.");
 
         var notifications = await unitOfWork.Notifications.GetUserNotificationsAsync(userId.Value, request.Page, request.PageSize, cancellationToken);
-        return Result<IReadOnlyList<NotificationDto>>.Success(mapper.Map<IReadOnlyList<NotificationDto>>(notifications));
+        return Result<IReadOnlyList<NotificationDto>>.Success(mapper.Map<List<NotificationDto>>(notifications));
     }
 
     public async Task<Result<int>> Handle(GetNotificationCountQuery request, CancellationToken cancellationToken)

@@ -50,13 +50,13 @@ public class DocumentQueryHandlers(
         }
 
         var docs = await unitOfWork.Documents.GetByEmployeeAsync(request.EmployeeId, cancellationToken);
-        return Result<IReadOnlyList<DocumentDto>>.Success(mapper.Map<IReadOnlyList<DocumentDto>>(docs));
+        return Result<IReadOnlyList<DocumentDto>>.Success(mapper.Map<List<DocumentDto>>(docs));
     }
 
     public async Task<Result<IReadOnlyList<DocumentDto>>> Handle(GetCompanyDocumentsQuery request, CancellationToken cancellationToken)
     {
         var docs = await unitOfWork.Documents.GetCompanyDocumentsAsync(cancellationToken);
-        return Result<IReadOnlyList<DocumentDto>>.Success(mapper.Map<IReadOnlyList<DocumentDto>>(docs));
+        return Result<IReadOnlyList<DocumentDto>>.Success(mapper.Map<List<DocumentDto>>(docs));
     }
 
     public async Task<Result<FileDownloadModel>> Handle(DownloadDocumentQuery request, CancellationToken cancellationToken)

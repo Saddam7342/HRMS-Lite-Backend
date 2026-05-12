@@ -28,7 +28,7 @@ public class ExpenseQueryHandlers(
         if (employee == null) return Result<IReadOnlyList<ExpenseClaimDto>>.Failure("Employee not found.");
 
         var claims = await unitOfWork.ExpenseClaims.GetByEmployeeAsync(employee.Id, cancellationToken);
-        return Result<IReadOnlyList<ExpenseClaimDto>>.Success(mapper.Map<IReadOnlyList<ExpenseClaimDto>>(claims));
+        return Result<IReadOnlyList<ExpenseClaimDto>>.Success(mapper.Map<List<ExpenseClaimDto>>(claims));
     }
 
     public async Task<Result<IReadOnlyList<ExpenseClaimDto>>> Handle(GetPendingExpenseApprovalsQuery request, CancellationToken cancellationToken)
@@ -37,7 +37,7 @@ public class ExpenseQueryHandlers(
         if (employee == null) return Result<IReadOnlyList<ExpenseClaimDto>>.Failure("Employee not found.");
 
         var pending = await unitOfWork.ExpenseClaims.GetPendingByManagerAsync(employee.Id, cancellationToken);
-        return Result<IReadOnlyList<ExpenseClaimDto>>.Success(mapper.Map<IReadOnlyList<ExpenseClaimDto>>(pending));
+        return Result<IReadOnlyList<ExpenseClaimDto>>.Success(mapper.Map<List<ExpenseClaimDto>>(pending));
     }
 
     public async Task<Result<IReadOnlyList<ExpenseClaimListDto>>> Handle(GetTeamExpenseClaimsQuery request, CancellationToken cancellationToken)
@@ -46,13 +46,13 @@ public class ExpenseQueryHandlers(
         if (employee == null) return Result<IReadOnlyList<ExpenseClaimListDto>>.Failure("Employee not found.");
 
         var teamClaims = await unitOfWork.ExpenseClaims.GetTeamClaimsAsync(employee.Id, cancellationToken);
-        return Result<IReadOnlyList<ExpenseClaimListDto>>.Success(mapper.Map<IReadOnlyList<ExpenseClaimListDto>>(teamClaims));
+        return Result<IReadOnlyList<ExpenseClaimListDto>>.Success(mapper.Map<List<ExpenseClaimListDto>>(teamClaims));
     }
 
     public async Task<Result<IReadOnlyList<ExpenseCategoryDto>>> Handle(GetExpenseCategoriesQuery request, CancellationToken cancellationToken)
     {
         var categories = await unitOfWork.ExpenseCategories.GetAllActiveAsync(cancellationToken);
-        return Result<IReadOnlyList<ExpenseCategoryDto>>.Success(mapper.Map<IReadOnlyList<ExpenseCategoryDto>>(categories));
+        return Result<IReadOnlyList<ExpenseCategoryDto>>.Success(mapper.Map<List<ExpenseCategoryDto>>(categories));
     }
 
     public async Task<Result<ExpenseClaimDto>> Handle(GetExpenseClaimByIdQuery request, CancellationToken cancellationToken)

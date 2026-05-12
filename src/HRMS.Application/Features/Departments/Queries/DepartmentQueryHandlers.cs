@@ -32,7 +32,8 @@ public class DepartmentQueryHandlers(
                 .Include(x => x.Employees)
                 .ToListAsync(cancellationToken);
 
-            var dtos = mapper.Map<IReadOnlyList<DepartmentListDto>>(departments);
+            // Map to List<> first — AutoMapper does not map List<Department> -> IReadOnlyList<Dto> directly.
+            var dtos = mapper.Map<List<DepartmentListDto>>(departments);
             return Result<IReadOnlyList<DepartmentListDto>>.Success(dtos);
         }
         catch (Exception ex)

@@ -28,7 +28,7 @@ public class TravelQueryHandlers(
         if (employee == null) return Result<IReadOnlyList<TravelRequestDto>>.Failure("Employee not found.");
 
         var travels = await unitOfWork.TravelRequests.GetByEmployeeAsync(employee.Id, cancellationToken);
-        return Result<IReadOnlyList<TravelRequestDto>>.Success(mapper.Map<IReadOnlyList<TravelRequestDto>>(travels));
+        return Result<IReadOnlyList<TravelRequestDto>>.Success(mapper.Map<List<TravelRequestDto>>(travels));
     }
 
     public async Task<Result<IReadOnlyList<TravelRequestDto>>> Handle(GetPendingTravelApprovalsQuery request, CancellationToken cancellationToken)
@@ -37,7 +37,7 @@ public class TravelQueryHandlers(
         if (employee == null) return Result<IReadOnlyList<TravelRequestDto>>.Failure("Employee not found.");
 
         var pending = await unitOfWork.TravelRequests.GetPendingByManagerAsync(employee.Id, cancellationToken);
-        return Result<IReadOnlyList<TravelRequestDto>>.Success(mapper.Map<IReadOnlyList<TravelRequestDto>>(pending));
+        return Result<IReadOnlyList<TravelRequestDto>>.Success(mapper.Map<List<TravelRequestDto>>(pending));
     }
 
     public async Task<Result<IReadOnlyList<TeamTravelScheduleDto>>> Handle(GetTeamTravelScheduleQuery request, CancellationToken cancellationToken)
@@ -46,7 +46,7 @@ public class TravelQueryHandlers(
         if (employee == null) return Result<IReadOnlyList<TeamTravelScheduleDto>>.Failure("Employee not found.");
 
         var teamSchedule = await unitOfWork.TravelRequests.GetTeamScheduleAsync(employee.Id, request.StartDate, request.EndDate, cancellationToken);
-        return Result<IReadOnlyList<TeamTravelScheduleDto>>.Success(mapper.Map<IReadOnlyList<TeamTravelScheduleDto>>(teamSchedule));
+        return Result<IReadOnlyList<TeamTravelScheduleDto>>.Success(mapper.Map<List<TeamTravelScheduleDto>>(teamSchedule));
     }
 
     public async Task<Result<IReadOnlyList<TravelRequestListDto>>> Handle(GetTravelHistoryQuery request, CancellationToken cancellationToken)
@@ -55,7 +55,7 @@ public class TravelQueryHandlers(
         if (employee == null) return Result<IReadOnlyList<TravelRequestListDto>>.Failure("Employee not found.");
 
         var travels = await unitOfWork.TravelRequests.GetByEmployeeAsync(employee.Id, cancellationToken);
-        return Result<IReadOnlyList<TravelRequestListDto>>.Success(mapper.Map<IReadOnlyList<TravelRequestListDto>>(travels));
+        return Result<IReadOnlyList<TravelRequestListDto>>.Success(mapper.Map<List<TravelRequestListDto>>(travels));
     }
 
     public async Task<Result<TravelRequestDto>> Handle(GetTravelRequestByIdQuery request, CancellationToken cancellationToken)
