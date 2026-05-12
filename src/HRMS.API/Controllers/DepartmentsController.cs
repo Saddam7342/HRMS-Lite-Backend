@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using HRMS.Application.Features.Departments.Commands.Create;
 using HRMS.Application.Features.Departments.Commands.Status;
 using HRMS.Application.Features.Departments.Commands.Update;
@@ -9,110 +10,86 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.API.Controllers;
 
+[ApiVersion("1.0")]
 public class DepartmentsController : BaseApiController
 {
-    /// <summary>
-    /// Creates a new department within the organization.
-    /// </summary>
     [HttpPost]
     [Authorize(Roles = "Admin")]
-    [ProducesResponseType(typeof(ApiResponse<Guid>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<Guid>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Create(CreateDepartmentCommand command)
     {
         var result = await Mediator.Send(command);
-        return result.IsSuccess ? Ok(ApiResponse<Guid>.Ok(result.Data!)) : BadRequest(ApiResponse<Guid>.Fail(result.Errors));
+        return result.IsSuccess ? OkData(result) : BadData(result);
     }
 
-    /// <summary>
-    /// Gets all departments in the organization.
-    /// </summary>
     [HttpGet]
     [Authorize(Roles = "Admin,Manager")]
-    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<DepartmentListDto>>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<DepartmentListDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
         var result = await Mediator.Send(new GetDepartmentsQuery());
-        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? OkData(result) : BadData(result);
     }
 
-    /// <summary>
-    /// Gets a full hierarchical tree of the organization's departments.
-    /// </summary>
     [HttpGet("hierarchy")]
     [Authorize(Roles = "Admin,Manager")]
-    [ProducesResponseType(typeof(ApiResponse<List<DepartmentHierarchyDto>>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<List<DepartmentHierarchyDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetHierarchy()
     {
         var result = await Mediator.Send(new GetDepartmentHierarchyQuery());
-        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? OkData(result) : BadData(result);
     }
 
-    /// <summary>
-    /// Gets a specific department's details by ID.
-    /// </summary>
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     [Authorize]
-    [ProducesResponseType(typeof(ApiResponse<DepartmentDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<DepartmentDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(Guid id)
     {
         var result = await Mediator.Send(new GetDepartmentByIdQuery(id));
-        return result.IsSuccess ? Ok(ApiResponse<DepartmentDto>.Ok(result.Data!)) : NotFound(ApiResponse<DepartmentDto>.Fail(result.Errors));
+        return result.IsSuccess ? OkData(result) : NotFoundData(result);
     }
 
-    /// <summary>
-    /// Updates a department's details. Prevents circular references.
-    /// </summary>
-    [HttpPut("{id}")]
+    [HttpGet("{id:guid}/employees")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<DepartmentEmployeeDto>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetEmployees(Guid id)
+    {
+        var result = await Mediator.Send(new GetDepartmentEmployeesQuery(id));
+        return result.IsSuccess ? OkData(result) : BadData(result);
+    }
+
+    [HttpPut("{id:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, UpdateDepartmentCommand command)
     {
-        if (id != command.Id) return BadRequest(ApiResponse.Fail("ID mismatch."));
+        if (id != command.Id)
+            return BadEnvelope("Route id must match body id.");
+
         var result = await Mediator.Send(command);
-        return result.IsSuccess ? Ok(ApiResponse.Ok()) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? OkEmpty(result) : BadEmpty(result);
     }
 
-    /// <summary>
-    /// Deletes a department if no employees are assigned to it.
-    /// </summary>
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await Mediator.Send(new DeleteDepartmentCommand(id));
-        return result.IsSuccess ? Ok(ApiResponse.Ok()) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? OkEmpty(result) : BadEmpty(result);
     }
 
-    /// <summary>
-    /// Activates a department.
-    /// </summary>
-    [HttpPut("{id}/activate")]
+    [HttpPut("{id:guid}/activate")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Activate(Guid id)
     {
         var result = await Mediator.Send(new ActivateDepartmentCommand(id));
-        return result.IsSuccess ? Ok(ApiResponse.Ok()) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? OkEmpty(result) : BadEmpty(result);
     }
 
-    /// <summary>
-    /// Deactivates a department.
-    /// </summary>
-    [HttpPut("{id}/deactivate")]
+    [HttpPut("{id:guid}/deactivate")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Deactivate(Guid id)
     {
         var result = await Mediator.Send(new DeactivateDepartmentCommand(id));
-        return result.IsSuccess ? Ok(ApiResponse.Ok()) : BadRequest(ApiResponse.Fail(result.Errors));
-    }
-
-    /// <summary>
-    /// Gets the list of employees assigned to a specific department.
-    /// </summary>
-    [HttpGet("{id}/employees")]
-    [Authorize]
-    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<DepartmentEmployeeDto>>), 200)]
-    public async Task<IActionResult> GetEmployees(Guid id)
-    {
-        var result = await Mediator.Send(new GetDepartmentEmployeesQuery(id));
-        return result.IsSuccess ? Ok(ApiResponse<IReadOnlyList<DepartmentEmployeeDto>>.Ok(result.Data!)) : BadRequest(ApiResponse<IReadOnlyList<DepartmentEmployeeDto>>.Fail(result.Errors));
+        return result.IsSuccess ? OkEmpty(result) : BadEmpty(result);
     }
 }

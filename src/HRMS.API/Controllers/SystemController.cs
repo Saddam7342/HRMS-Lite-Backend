@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using HRMS.Application.Common.Interfaces;
 using HRMS.Shared.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -5,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.API.Controllers;
 
+[ApiVersion("1.0")]
 [Authorize(Roles = "Admin")]
 public class SystemController(ICacheService cacheService) : BaseApiController
 {
@@ -12,15 +14,11 @@ public class SystemController(ICacheService cacheService) : BaseApiController
     public async Task<IActionResult> ClearCache([FromQuery] string? prefix)
     {
         if (string.IsNullOrEmpty(prefix))
-        {
             await cacheService.RemoveByPrefixAsync("");
-        }
         else
-        {
             await cacheService.RemoveByPrefixAsync(prefix);
-        }
 
-        return Ok(ApiResponse.Ok("Cache cleared successfully."));
+        return Ok(ApiResponse.Ok("Cache cleared successfully.", RequestTraceId));
     }
 
     [HttpGet("status")]
@@ -32,6 +30,6 @@ public class SystemController(ICacheService cacheService) : BaseApiController
             Version = "1.0.0",
             Status = "Healthy",
             Timestamp = DateTime.UtcNow
-        }));
+        }, message: null, traceId: RequestTraceId));
     }
 }

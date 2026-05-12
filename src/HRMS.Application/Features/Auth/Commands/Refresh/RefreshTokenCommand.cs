@@ -48,6 +48,8 @@ public class RefreshTokenHandler(
         user.RefreshTokens.Add(newRefreshToken);
         await unitOfWork.CommitAsync(cancellationToken);
 
-        return Result<TokenDto>.Success(new TokenDto(newAccessToken, newRefreshTokenStr, newRefreshToken.ExpiresAt));
+        return Result<TokenDto>.Success(
+            new TokenDto(newAccessToken, newRefreshTokenStr, newRefreshToken.ExpiresAt),
+            "Token refreshed successfully.");
     }
 }

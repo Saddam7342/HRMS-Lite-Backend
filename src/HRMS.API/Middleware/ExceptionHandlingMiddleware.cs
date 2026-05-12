@@ -20,6 +20,12 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         }
     }
 
+    private static string GetTraceId(HttpContext context) =>
+        context.Items.TryGetValue("X-Correlation-ID", out var obj) && obj is string cid &&
+        !string.IsNullOrWhiteSpace(cid)
+            ? cid
+            : context.TraceIdentifier;
+
     private static Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         var code = HttpStatusCode.InternalServerError;
@@ -55,7 +61,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)code;
 
-        var response = ApiResponse<object>.Fail(errors ?? [message], message, context.TraceIdentifier);
+        var response = ApiResponse<object>.Fail(errors ?? [message], message, GetTraceId(context));
         
         result = JsonSerializer.Serialize(response, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 

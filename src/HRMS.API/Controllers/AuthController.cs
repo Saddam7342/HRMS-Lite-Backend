@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using HRMS.Application.Features.Auth.Commands.Account;
 using HRMS.Application.Features.Auth.Commands.Login;
 using HRMS.Application.Features.Auth.Commands.Refresh;
@@ -6,7 +7,6 @@ using HRMS.Application.Features.Auth.Queries;
 using HRMS.Shared.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Asp.Versioning;
 
 namespace HRMS.API.Controllers;
 
@@ -18,13 +18,12 @@ public class AuthController : BaseApiController
     /// </summary>
     [HttpPost("login")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(ApiResponse<LoginResponse>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login(LoginCommand command)
     {
         var result = await Mediator.Send(command);
-        return result.IsSuccess 
-            ? Ok(ApiResponse<LoginResponse>.Ok(result.Data!)) 
-            : BadRequest(ApiResponse<LoginResponse>.Fail(result.Errors));
+        return result.IsSuccess ? OkData(result) : UnauthorizedData(result);
     }
 
     /// <summary>
@@ -32,24 +31,23 @@ public class AuthController : BaseApiController
     /// </summary>
     [HttpPost("refresh")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(ApiResponse<TokenDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<TokenDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<TokenDto>), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Refresh(RefreshTokenCommand command)
     {
         var result = await Mediator.Send(command);
-        return result.IsSuccess 
-            ? Ok(ApiResponse<TokenDto>.Ok(result.Data!)) 
-            : BadRequest(ApiResponse<TokenDto>.Fail(result.Errors));
+        return result.IsSuccess ? OkData(result) : UnauthorizedData(result);
     }
 
     /// <summary>
-    /// Revokes the current refresh token and logs out the user.
+    /// Revokes the given refresh token (idempotent — unknown tokens still succeed).
     /// </summary>
     [HttpPost("logout")]
     [Authorize]
     public async Task<IActionResult> Logout(LogoutCommand command)
     {
         var result = await Mediator.Send(command);
-        return result.IsSuccess ? Ok(ApiResponse.Ok()) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? OkEmpty(result) : BadEmpty(result);
     }
 
     /// <summary>
@@ -60,7 +58,7 @@ public class AuthController : BaseApiController
     public async Task<IActionResult> ChangePassword(ChangePasswordCommand command)
     {
         var result = await Mediator.Send(command);
-        return result.IsSuccess ? Ok(ApiResponse.Ok()) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? OkEmpty(result) : BadEmpty(result);
     }
 
     /// <summary>
@@ -68,12 +66,11 @@ public class AuthController : BaseApiController
     /// </summary>
     [HttpGet("me")]
     [Authorize]
-    [ProducesResponseType(typeof(ApiResponse<CurrentUserDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<CurrentUserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<CurrentUserDto>), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetMe()
     {
         var result = await Mediator.Send(new GetCurrentUserQuery());
-        return result.IsSuccess 
-            ? Ok(ApiResponse<CurrentUserDto>.Ok(result.Data!)) 
-            : Unauthorized(ApiResponse<CurrentUserDto>.Fail(result.Errors));
+        return result.IsSuccess ? OkData(result) : UnauthorizedData(result);
     }
 }

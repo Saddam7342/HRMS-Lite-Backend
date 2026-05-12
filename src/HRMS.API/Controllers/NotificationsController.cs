@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using HRMS.Application.Features.Notifications.Commands;
 using HRMS.Application.Features.Notifications.DTOs;
 using HRMS.Application.Features.Notifications.Queries;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.API.Controllers;
 
+[ApiVersion("1.0")]
 public class NotificationsController : BaseApiController
 {
     [HttpGet("my")]
@@ -14,7 +16,7 @@ public class NotificationsController : BaseApiController
     public async Task<IActionResult> GetMyNotifications([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var result = await Mediator.Send(new GetMyNotificationsQuery(page, pageSize));
-        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? OkData(result) : BadData(result);
     }
 
     [HttpGet("count")]
@@ -22,15 +24,7 @@ public class NotificationsController : BaseApiController
     public async Task<IActionResult> GetUnreadCount()
     {
         var result = await Mediator.Send(new GetNotificationCountQuery());
-        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
-    }
-
-    [HttpPut("{id}/read")]
-    [Authorize]
-    public async Task<IActionResult> MarkAsRead(Guid id)
-    {
-        var result = await Mediator.Send(new MarkAsReadCommand(id));
-        return result.IsSuccess ? Ok(ApiResponse.Ok()) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? OkData(result) : BadData(result);
     }
 
     [HttpPut("read-all")]
@@ -38,15 +32,7 @@ public class NotificationsController : BaseApiController
     public async Task<IActionResult> MarkAllAsRead()
     {
         var result = await Mediator.Send(new MarkAllAsReadCommand());
-        return result.IsSuccess ? Ok(ApiResponse.Ok()) : BadRequest(ApiResponse.Fail(result.Errors));
-    }
-
-    [HttpDelete("{id}")]
-    [Authorize]
-    public async Task<IActionResult> Delete(Guid id)
-    {
-        var result = await Mediator.Send(new DeleteNotificationCommand(id));
-        return result.IsSuccess ? Ok(ApiResponse.Ok()) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? OkEmpty(result) : BadEmpty(result);
     }
 
     [HttpGet("preferences")]
@@ -54,7 +40,7 @@ public class NotificationsController : BaseApiController
     public async Task<IActionResult> GetPreferences()
     {
         var result = await Mediator.Send(new GetNotificationPreferencesQuery());
-        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? OkData(result) : BadData(result);
     }
 
     [HttpPut("preferences")]
@@ -70,6 +56,22 @@ public class NotificationsController : BaseApiController
             request.AttendanceNotifications);
 
         var result = await Mediator.Send(command);
-        return result.IsSuccess ? Ok(ApiResponse.Ok()) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? OkEmpty(result) : BadEmpty(result);
+    }
+
+    [HttpPut("{id:guid}/read")]
+    [Authorize]
+    public async Task<IActionResult> MarkAsRead(Guid id)
+    {
+        var result = await Mediator.Send(new MarkAsReadCommand(id));
+        return result.IsSuccess ? OkEmpty(result) : BadEmpty(result);
+    }
+
+    [HttpDelete("{id:guid}")]
+    [Authorize]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var result = await Mediator.Send(new DeleteNotificationCommand(id));
+        return result.IsSuccess ? OkEmpty(result) : BadEmpty(result);
     }
 }
