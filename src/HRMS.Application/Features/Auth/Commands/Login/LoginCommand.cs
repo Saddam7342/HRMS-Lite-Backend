@@ -8,7 +8,7 @@ using MediatR;
 
 namespace HRMS.Application.Features.Auth.Commands.Login;
 
-public record LoginCommand(string EmailOrUsername, string Password, Guid? OrganizationId = null) : IRequest<Result<LoginResponse>>;
+public record LoginCommand(string EmailOrUsername, string Password, Guid? OrganizationId = null, string? Slug = null) : IRequest<Result<LoginResponse>>;
 
 public class LoginValidator : AbstractValidator<LoginCommand>
 {
@@ -33,9 +33,18 @@ public class LoginHandler(
         if (user == null)
             return Result<LoginResponse>.Failure("Invalid credentials.");
 
-        // If OrganizationId is provided, ensure it matches the user's organization
-        if (request.OrganizationId.HasValue && request.OrganizationId.Value != user.OrganizationId)
+        // Resolve OrganizationId from Slug if provided
+        if (!string.IsNullOrEmpty(request.Slug))
+        {
+            var org = await unitOfWork.Organizations.GetBySlugAsync(request.Slug, cancellationToken);
+            if (org == null || user.OrganizationId != org.Id)
+                return Result<LoginResponse>.Failure("Invalid credentials.");
+        }
+        // If OrganizationId is explicitly provided, ensure it matches
+        else if (request.OrganizationId.HasValue && request.OrganizationId.Value != user.OrganizationId)
+        {
             return Result<LoginResponse>.Failure("Invalid credentials.");
+        }
 
         if (!user.IsActive)
             return Result<LoginResponse>.Failure("Account is deactivated.");

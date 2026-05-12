@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<ISettingsService, SettingsService>();
         services.AddScoped<IPayrollEngine, PayrollEngine>();
+        services.AddScoped<IOrganizationProvisioningService, OrganizationProvisioningService>();
         services.AddScoped<ITenantContext, HRMS.Infrastructure.Tenancy.TenantContext>();
 
         // Performance & Resilience
