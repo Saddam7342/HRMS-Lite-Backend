@@ -82,7 +82,6 @@ public class LoginHandler(
             };
 
             user.RefreshTokens.Add(refreshToken);
-            await unitOfWork.CommitAsync(cancellationToken);
 
             // Audit Login
             await auditService.LogActivityAsync(
@@ -94,6 +93,8 @@ public class LoginHandler(
                 new { user.Email, user.LastLoginAt }, 
                 user.OrganizationId,
                 cancellationToken);
+
+            await unitOfWork.CommitAsync(cancellationToken);
 
             var roles = user.UserRoles
                 .Where(ur => ur.Role != null)

@@ -40,6 +40,5 @@ public class AuditService(
         if (newValues != null) auditLog.NewValues = JsonSerializer.Serialize(newValues);
 
         await unitOfWork.AuditLogs.AddAsync(auditLog, ct);
-        await unitOfWork.CommitAsync(ct);
     }
 }
