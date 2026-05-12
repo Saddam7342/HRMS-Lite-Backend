@@ -30,13 +30,16 @@ public class CreateDepartmentValidator : AbstractValidator<CreateDepartmentComma
             .MustAsync(BeUniqueCode).WithMessage("Department code already exists.");
 
         RuleFor(x => x.ParentDepartmentId)
-            .MustAsync(Exist).When(x => x.ParentDepartmentId.HasValue)
+            .MustAsync(Exist).When(x => IsValidGuid(x.ParentDepartmentId))
             .WithMessage("Parent department not found.");
 
         RuleFor(x => x.DepartmentHeadId)
-            .MustAsync(BeActiveEmployee).When(x => x.DepartmentHeadId.HasValue)
+            .MustAsync(BeActiveEmployee).When(x => IsValidGuid(x.DepartmentHeadId))
             .WithMessage("Department head must be an active employee.");
     }
+
+    private bool IsValidGuid(Guid? id) => 
+        id.HasValue && id != Guid.Empty && id != Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6");
 
     private async Task<bool> BeUniqueName(string name, CancellationToken ct) =>
         !await _unitOfWork.Departments.NameExistsAsync(name, ct);
@@ -66,8 +69,8 @@ public class CreateDepartmentHandler(IUnitOfWork unitOfWork) : IRequestHandler<C
             Name = request.Name,
             Code = request.Code,
             Description = request.Description,
-            ParentDepartmentId = request.ParentDepartmentId,
-            DepartmentHeadId = request.DepartmentHeadId,
+            ParentDepartmentId = IsValidId(request.ParentDepartmentId) ? request.ParentDepartmentId : null,
+            DepartmentHeadId = IsValidId(request.DepartmentHeadId) ? request.DepartmentHeadId : null,
             IsActive = true
         };
 
@@ -76,4 +79,7 @@ public class CreateDepartmentHandler(IUnitOfWork unitOfWork) : IRequestHandler<C
 
         return Result<Guid>.Success(department.Id);
     }
+
+    private bool IsValidId(Guid? id) => 
+        id.HasValue && id != Guid.Empty && id != Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6");
 }
