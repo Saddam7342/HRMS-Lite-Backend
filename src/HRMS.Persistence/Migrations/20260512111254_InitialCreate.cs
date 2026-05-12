@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,6 +11,39 @@ namespace HRMS.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // Drop all foreign keys first to avoid dependency issues when dropping tables
+            migrationBuilder.Sql(@"
+                DECLARE @Sql NVARCHAR(MAX) = '';
+                SELECT @Sql += 'ALTER TABLE ' + QUOTENAME(OBJECT_SCHEMA_NAME(parent_object_id)) + '.' + QUOTENAME(OBJECT_NAME(parent_object_id)) + 
+                                ' DROP CONSTRAINT ' + QUOTENAME(name) + ';' + CHAR(13)
+                FROM sys.foreign_keys;
+                EXEC sp_executesql @Sql;
+            ");
+
+            // Drop existing tables if they exist to ensure a clean transition from multi-tenant to single-company schema
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[TravelRequests]', 'U') IS NOT NULL DROP TABLE [dbo].[TravelRequests]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[LeaveRequests]', 'U') IS NOT NULL DROP TABLE [dbo].[LeaveRequests]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[LeaveBalances]', 'U') IS NOT NULL DROP TABLE [dbo].[LeaveBalances]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[ExpenseClaims]', 'U') IS NOT NULL DROP TABLE [dbo].[ExpenseClaims]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[Documents]', 'U') IS NOT NULL DROP TABLE [dbo].[Documents]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[Employees]', 'U') IS NOT NULL DROP TABLE [dbo].[Employees]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[Departments]', 'U') IS NOT NULL DROP TABLE [dbo].[Departments]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[AttendanceRecords]', 'U') IS NOT NULL DROP TABLE [dbo].[AttendanceRecords]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[UserRoles]', 'U') IS NOT NULL DROP TABLE [dbo].[UserRoles]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[RefreshTokens]', 'U') IS NOT NULL DROP TABLE [dbo].[RefreshTokens]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[Notifications]', 'U') IS NOT NULL DROP TABLE [dbo].[Notifications]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[NotificationPreferences]', 'U') IS NOT NULL DROP TABLE [dbo].[NotificationPreferences]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[AuditLogs]', 'U') IS NOT NULL DROP TABLE [dbo].[AuditLogs]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[RolePermissions]', 'U') IS NOT NULL DROP TABLE [dbo].[RolePermissions]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[Users]', 'U') IS NOT NULL DROP TABLE [dbo].[Users]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[Roles]', 'U') IS NOT NULL DROP TABLE [dbo].[Roles]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[Permissions]', 'U') IS NOT NULL DROP TABLE [dbo].[Permissions]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[LeaveTypes]', 'U') IS NOT NULL DROP TABLE [dbo].[LeaveTypes]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[ExpenseCategories]', 'U') IS NOT NULL DROP TABLE [dbo].[ExpenseCategories]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[Organizations]', 'U') IS NOT NULL DROP TABLE [dbo].[Organizations]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[OrganizationSettings]', 'U') IS NOT NULL DROP TABLE [dbo].[OrganizationSettings]");
+            migrationBuilder.Sql("IF OBJECT_ID('[dbo].[Payrolls]', 'U') IS NOT NULL DROP TABLE [dbo].[Payrolls]");
+
             migrationBuilder.CreateTable(
                 name: "ExpenseCategories",
                 columns: table => new
