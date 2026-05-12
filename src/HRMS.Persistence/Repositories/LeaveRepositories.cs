@@ -8,9 +8,9 @@ namespace HRMS.Persistence.Repositories;
 
 public class LeaveTypeRepository(AppDbContext context) : GenericRepository<LeaveType>(context), ILeaveTypeRepository
 {
-    public async Task<IReadOnlyList<LeaveType>> GetAllActiveAsync(Guid tenantId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<LeaveType>> GetAllActiveAsync(CancellationToken ct = default)
     {
-        return await _dbSet.Where(x => x.IsActive && x.TenantId == tenantId).ToListAsync(ct);
+        return await _dbSet.Where(x => x.IsActive).ToListAsync(ct);
     }
 }
 
@@ -51,21 +51,21 @@ public class LeaveRequestRepository(AppDbContext context) : GenericRepository<Le
             .ToListAsync(ct);
     }
 
-    public async Task<IReadOnlyList<LeaveRequest>> GetByStatusAsync(LeaveRequestStatus status, Guid tenantId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<LeaveRequest>> GetByStatusAsync(LeaveRequestStatus status, CancellationToken ct = default)
     {
         return await _dbSet
             .Include(x => x.Employee)
             .Include(x => x.LeaveType)
-            .Where(x => x.Status == status && x.TenantId == tenantId)
+            .Where(x => x.Status == status)
             .ToListAsync(ct);
     }
 
     public async Task<decimal> GetUsedDaysAsync(Guid employeeId, Guid leaveTypeId, int year, CancellationToken ct = default)
     {
         return await _dbSet
-            .Where(x => x.EmployeeId == employeeId && 
-                        x.LeaveTypeId == leaveTypeId && 
-                        x.Status == LeaveRequestStatus.Approved && 
+            .Where(x => x.EmployeeId == employeeId &&
+                        x.LeaveTypeId == leaveTypeId &&
+                        x.Status == LeaveRequestStatus.Approved &&
                         x.StartDate.Year == year)
             .SumAsync(x => x.TotalDays, ct);
     }
@@ -75,7 +75,7 @@ public class LeaveRequestRepository(AppDbContext context) : GenericRepository<Le
         return await _dbSet
             .Include(x => x.Employee)
             .Include(x => x.LeaveType)
-            .Where(x => (x.Employee.ManagerId == managerId || x.EmployeeId == managerId) && 
+            .Where(x => (x.Employee.ManagerId == managerId || x.EmployeeId == managerId) &&
                         x.StartDate <= end && x.EndDate >= start &&
                         (x.Status == LeaveRequestStatus.Approved || x.Status == LeaveRequestStatus.Pending))
             .ToListAsync(ct);
@@ -84,9 +84,9 @@ public class LeaveRequestRepository(AppDbContext context) : GenericRepository<Le
     public async Task<bool> HasOverlappingLeaveAsync(Guid employeeId, DateTime start, DateTime end, Guid? excludeId = null, CancellationToken ct = default)
     {
         return await _dbSet
-            .AnyAsync(x => x.EmployeeId == employeeId && 
+            .AnyAsync(x => x.EmployeeId == employeeId &&
                            x.Id != excludeId &&
-                           x.Status != LeaveRequestStatus.Cancelled && 
+                           x.Status != LeaveRequestStatus.Cancelled &&
                            x.Status != LeaveRequestStatus.Rejected &&
                            x.StartDate <= end && x.EndDate >= start, ct);
     }

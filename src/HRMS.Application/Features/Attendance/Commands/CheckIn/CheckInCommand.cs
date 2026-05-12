@@ -41,8 +41,7 @@ public class CheckInHandler(
             CheckInTime = checkInTime,
             Status = AttendanceStatus.CheckedIn,
             IsLate = isLate,
-            Notes = request.Notes,
-            TenantId = employee.TenantId
+            Notes = request.Notes
         };
 
         await unitOfWork.Attendance.AddAsync(attendance, cancellationToken);

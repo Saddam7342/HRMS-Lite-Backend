@@ -19,7 +19,6 @@ public class AuditService(
         string? message = null,
         object? oldValues = null, 
         object? newValues = null,
-        Guid? tenantId = null,
         CancellationToken ct = default)
     {
         var context = httpContextAccessor.HttpContext;
@@ -27,7 +26,6 @@ public class AuditService(
         var auditLog = new AuditLog
         {
             UserId = currentUserService.UserId,
-            TenantId = tenantId ?? currentUserService.TenantId ?? Guid.Empty,
             ActionType = actionType,
             EntityName = entityName,
             EntityId = entityId,

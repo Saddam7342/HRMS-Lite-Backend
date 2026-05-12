@@ -10,7 +10,7 @@ namespace HRMS.Application.Features.Documents.Queries;
 
 public record GetDocumentByIdQuery(Guid Id) : IRequest<Result<DocumentDto>>;
 public record GetEmployeeDocumentsQuery(Guid EmployeeId) : IRequest<Result<IReadOnlyList<DocumentDto>>>;
-public record GetOrganizationDocumentsQuery() : IRequest<Result<IReadOnlyList<DocumentDto>>>;
+public record GetCompanyDocumentsQuery() : IRequest<Result<IReadOnlyList<DocumentDto>>>;
 public record DownloadDocumentQuery(Guid Id) : IRequest<Result<FileDownloadModel>>;
 
 public record FileDownloadModel(Stream FileStream, string ContentType, string FileName);
@@ -18,12 +18,11 @@ public record FileDownloadModel(Stream FileStream, string ContentType, string Fi
 public class DocumentQueryHandlers(
     IUnitOfWork unitOfWork,
     IFileStorageService fileStorageService,
-    ITenantContext tenantContext,
     IMapper mapper,
     ICurrentUserService currentUserService) 
     : IRequestHandler<GetDocumentByIdQuery, Result<DocumentDto>>,
       IRequestHandler<GetEmployeeDocumentsQuery, Result<IReadOnlyList<DocumentDto>>>,
-      IRequestHandler<GetOrganizationDocumentsQuery, Result<IReadOnlyList<DocumentDto>>>,
+      IRequestHandler<GetCompanyDocumentsQuery, Result<IReadOnlyList<DocumentDto>>>,
       IRequestHandler<DownloadDocumentQuery, Result<FileDownloadModel>>
 {
     public async Task<Result<DocumentDto>> Handle(GetDocumentByIdQuery request, CancellationToken cancellationToken)
@@ -42,7 +41,7 @@ public class DocumentQueryHandlers(
 
     public async Task<Result<IReadOnlyList<DocumentDto>>> Handle(GetEmployeeDocumentsQuery request, CancellationToken cancellationToken)
     {
-        if (currentUserService.Roles.Contains("Employee") && !currentUserService.Roles.Contains("Manager") && !currentUserService.Roles.Contains("OrganizationAdmin"))
+        if (currentUserService.Roles.Contains("Employee") && !currentUserService.Roles.Contains("Manager") && !currentUserService.Roles.Contains("Admin"))
         {
             var userId = currentUserService.UserId ?? Guid.Empty;
             var employee = await unitOfWork.Employees.GetByUserIdAsync(userId, cancellationToken);
@@ -54,9 +53,9 @@ public class DocumentQueryHandlers(
         return Result<IReadOnlyList<DocumentDto>>.Success(mapper.Map<IReadOnlyList<DocumentDto>>(docs));
     }
 
-    public async Task<Result<IReadOnlyList<DocumentDto>>> Handle(GetOrganizationDocumentsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<IReadOnlyList<DocumentDto>>> Handle(GetCompanyDocumentsQuery request, CancellationToken cancellationToken)
     {
-        var docs = await unitOfWork.Documents.GetByOrganizationAsync(tenantContext.TenantId, cancellationToken);
+        var docs = await unitOfWork.Documents.GetCompanyDocumentsAsync(cancellationToken);
         return Result<IReadOnlyList<DocumentDto>>.Success(mapper.Map<IReadOnlyList<DocumentDto>>(docs));
     }
 
@@ -75,11 +74,10 @@ public class DocumentQueryHandlers(
 
     private bool CanAccessDocument(Document doc)
     {
-        if (currentUserService.Roles.Contains("OrganizationAdmin")) return true;
-        if (doc.DocumentType == DocumentType.Organization) return true;
+        if (currentUserService.Roles.Contains("Admin")) return true;
+        if (doc.DocumentType == DocumentType.Company) return true;
         if (currentUserService.Roles.Contains("Manager")) return true;
 
-        // Basic check for employee self-access can be added here if needed
         return true; 
     }
 

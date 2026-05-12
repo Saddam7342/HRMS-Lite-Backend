@@ -17,7 +17,7 @@ using HRMS.Shared.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- Serilog Configuration ---
+// --- Serilog ---
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
@@ -38,8 +38,13 @@ builder.Services.AddEndpointsApiExplorer();
 // --- Swagger ---
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "HRMS API", Version = "v1" });
-    
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "HRMS API",
+        Version = "v1",
+        Description = "Single-Company Internal HRMS — Employee Management System"
+    });
+
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     if (File.Exists(xmlPath)) c.IncludeXmlComments(xmlPath);
@@ -57,7 +62,11 @@ builder.Services.AddSwaggerGen(c =>
         {
             new Microsoft.OpenApi.Models.OpenApiSecurityScheme
             {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference { Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme, Id = "Bearer" }
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
             },
             Array.Empty<string>()
         }
@@ -89,18 +98,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtSettings?.Issuer,
             ValidAudience = jwtSettings?.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings?.Secret ?? ""))
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtSettings?.Secret ?? ""))
         };
     });
 
+// Simple 3-role authorization policies — single-company HRMS
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("PlatformAdminOnly", policy => policy.RequireRole("PlatformAdmin"));
-    options.AddPolicy("OrgAdminOnly", policy => policy.RequireRole("OrganizationAdmin"));
-    options.AddPolicy("ManagerOnly", policy => policy.RequireRole("Manager"));
-    
-    // Permission-based policy example
-    options.AddPolicy("CanViewEmployees", policy => policy.RequireClaim(AppClaimTypes.Permission, "employees:view"));
+    options.AddPolicy("AdminOnly",       policy => policy.RequireRole("Admin"));
+    options.AddPolicy("ManagerOnly",     policy => policy.RequireRole("Manager"));
+    options.AddPolicy("AdminOrManager",  policy => policy.RequireRole("Admin", "Manager"));
+    options.AddPolicy("CanViewEmployees",policy => policy.RequireClaim(AppClaimTypes.Permission, "employees:view"));
 });
 
 // --- Health Checks ---
@@ -114,29 +123,27 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    
-    // ONLY apply migrations automatically in Development OR if explicitly forced via env var
+
     var isDevelopment = app.Environment.IsDevelopment();
     var forceMigration = builder.Configuration.GetValue<bool>("ApplyMigrationsAtStartup", defaultValue: false);
-    
+
     if (isDevelopment || forceMigration)
     {
-        Log.Information("Applying migrations (Environment: {Env}, Forced: {Forced})...", app.Environment.EnvironmentName, forceMigration);
+        Log.Information("Applying migrations (Environment: {Env}, Forced: {Forced})...",
+            app.Environment.EnvironmentName, forceMigration);
         int retryCount = 0;
         while (retryCount < 5)
         {
             try
             {
                 if (context.Database.GetPendingMigrations().Any())
-                {
                     context.Database.Migrate();
-                }
                 break;
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
                 retryCount++;
-                if (retryCount >= 5) 
+                if (retryCount >= 5)
                 {
                     Log.Fatal(ex, "Database migration failed after multiple retries.");
                     throw;
@@ -150,8 +157,8 @@ using (var scope = app.Services.CreateScope())
     {
         Log.Information("Auto-migration skipped in {Env} environment.", app.Environment.EnvironmentName);
     }
-    
-    try 
+
+    try
     {
         await IdentitySeeder.SeedAsync(app.Services);
     }
@@ -166,7 +173,6 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<RateLimitingMiddleware>();
 
-// Enable Swagger in Development OR if ShowSwagger is true in config
 var showSwagger = builder.Configuration.GetValue<bool>("ShowSwagger", defaultValue: false);
 if (app.Environment.IsDevelopment() || showSwagger)
 {
@@ -174,24 +180,17 @@ if (app.Environment.IsDevelopment() || showSwagger)
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "HRMS API V1");
-        c.RoutePrefix = "swagger"; // This ensures it's at /swagger
+        c.RoutePrefix = "swagger";
     });
 }
 
 app.UseSerilogRequestLogging();
 app.UseStaticFiles();
-
-// Recommended: Move HttpsRedirection higher or ensure it's not breaking health checks
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
-app.UseMiddleware<TenantResolutionMiddleware>();
-app.UseMiddleware<FeatureFlagMiddleware>();
 app.UseAuthorization();
-
 app.MapControllers();
 
-// Optimized Health Check Output
 app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
     ResponseWriter = async (context, report) =>
@@ -209,13 +208,14 @@ app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks
             }),
             totalDuration = report.TotalDuration.TotalMilliseconds
         };
-        await context.Response.WriteAsync(JsonSerializer.Serialize(response, new JsonSerializerOptions { WriteIndented = true }));
+        await context.Response.WriteAsync(
+            JsonSerializer.Serialize(response, new JsonSerializerOptions { WriteIndented = true }));
     }
 });
 
 try
 {
-    Log.Information("Starting HRMS API...");
+    Log.Information("Starting HRMS API (Single-Company Mode)...");
     app.Run();
 }
 catch (Exception ex)

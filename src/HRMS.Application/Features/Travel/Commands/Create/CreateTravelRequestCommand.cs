@@ -52,8 +52,7 @@ public class CreateTravelRequestHandler(
             FromDate = request.FromDate,
             ToDate = request.ToDate,
             EstimatedBudget = request.EstimatedBudget,
-            Status = TravelRequestStatus.Pending,
-            TenantId = employee.TenantId
+            Status = TravelRequestStatus.Pending
         };
 
         await unitOfWork.TravelRequests.AddAsync(travelRequest, cancellationToken);

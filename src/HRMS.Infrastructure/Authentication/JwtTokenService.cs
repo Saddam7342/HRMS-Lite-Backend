@@ -11,6 +11,11 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace HRMS.Infrastructure.Authentication;
 
+/// <summary>
+/// Generates JWT access tokens and refresh tokens.
+/// Single-company HRMS — no TenantId claim included.
+/// Claims: UserId, Email, Username, Roles, Permissions.
+/// </summary>
 public class JwtTokenService(IOptions<JwtSettings> jwtSettings) : IJwtTokenService
 {
     private readonly JwtSettings _jwtSettings = jwtSettings.Value;
@@ -19,22 +24,20 @@ public class JwtTokenService(IOptions<JwtSettings> jwtSettings) : IJwtTokenServi
     {
         var claims = new List<Claim>
         {
-            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new(JwtRegisteredClaimNames.Sub,   user.Id.ToString()),
             new(JwtRegisteredClaimNames.Email, user.Email),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new(AppClaimTypes.Username, user.Username),
-            new(AppClaimTypes.TenantId, user.OrganizationId.ToString()),
-            new(AppClaimTypes.UserId, user.Id.ToString())
+            new(JwtRegisteredClaimNames.Jti,   Guid.NewGuid().ToString()),
+            new(AppClaimTypes.Username,         user.Username),
+            new(AppClaimTypes.UserId,           user.Id.ToString()),
+            new(AppClaimTypes.FullName,         $"{user.FirstName} {user.LastName}".Trim())
         };
 
-        // Add Roles
+        // Roles & Permissions from UserRoles
         foreach (var userRole in user.UserRoles)
         {
             if (userRole.Role == null) continue;
-            
             claims.Add(new Claim(ClaimTypes.Role, userRole.Role.Name));
-            
-            // Add Permissions
+
             foreach (var rolePermission in userRole.Role.RolePermissions)
             {
                 if (rolePermission.Permission == null) continue;
@@ -42,19 +45,18 @@ public class JwtTokenService(IOptions<JwtSettings> jwtSettings) : IJwtTokenServi
             }
         }
 
-        var secret = !string.IsNullOrWhiteSpace(_jwtSettings.Secret) 
-            ? _jwtSettings.Secret 
+        var secret = !string.IsNullOrWhiteSpace(_jwtSettings.Secret)
+            ? _jwtSettings.Secret
             : "SuperSecretDefaultKeyForDevelopment_AtLeast32CharsLong!";
-        
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+
+        var key   = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var expires = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryMinutes);
 
         var token = new JwtSecurityToken(
             _jwtSettings.Issuer,
             _jwtSettings.Audience,
             claims,
-            expires: expires,
+            expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryMinutes),
             signingCredentials: creds
         );
 
@@ -73,18 +75,19 @@ public class JwtTokenService(IOptions<JwtSettings> jwtSettings) : IJwtTokenServi
     {
         var tokenValidationParameters = new TokenValidationParameters
         {
-            ValidateAudience = false,
-            ValidateIssuer = false,
+            ValidateAudience         = false,
+            ValidateIssuer           = false,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret)),
-            ValidateLifetime = false
+            IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret)),
+            ValidateLifetime         = false
         };
 
         var tokenHandler = new JwtSecurityTokenHandler();
-        var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
+        var principal    = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
 
-        if (securityToken is not JwtSecurityToken jwtSecurityToken || 
-            !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+        if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+            !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
+                StringComparison.InvariantCultureIgnoreCase))
         {
             throw new SecurityTokenException("Invalid token");
         }

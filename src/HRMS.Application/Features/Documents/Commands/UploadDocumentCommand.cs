@@ -17,7 +17,6 @@ public record UploadDocumentCommand(
 public class UploadDocumentHandler(
     IUnitOfWork unitOfWork,
     IFileStorageService fileStorageService,
-    ITenantContext tenantContext,
     ICurrentUserService currentUserService) : IRequestHandler<UploadDocumentCommand, Result<Guid>>
 {
     public async Task<Result<Guid>> Handle(UploadDocumentCommand request, CancellationToken cancellationToken)
@@ -29,8 +28,8 @@ public class UploadDocumentHandler(
             return Result<Guid>.Failure("Invalid file type. Allowed: pdf, jpg, png, docx.");
 
         // 2. Storage Path
-        var subDir = request.DocumentType == DocumentType.Employee ? "employees" : "organization";
-        var path = $"documents/{tenantContext.TenantId}/{subDir}/{Guid.NewGuid()}{extension}";
+        var subDir = request.DocumentType == DocumentType.Employee ? "employees" : "company";
+        var path = $"documents/{subDir}/{Guid.NewGuid()}{extension}";
         
         using var stream = request.File.OpenReadStream();
         var filePath = await fileStorageService.UploadAsync(stream, path, request.File.ContentType, cancellationToken);

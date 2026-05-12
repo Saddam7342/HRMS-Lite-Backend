@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.API.Controllers;
 
-[Authorize(Roles = "PlatformAdmin")]
+[Authorize(Roles = "Admin")]
 public class SystemController(ICacheService cacheService) : BaseApiController
 {
     [HttpPost("cache/clear")]
@@ -13,7 +13,6 @@ public class SystemController(ICacheService cacheService) : BaseApiController
     {
         if (string.IsNullOrEmpty(prefix))
         {
-            // Simple clearing for current tenant
             await cacheService.RemoveByPrefixAsync("");
         }
         else

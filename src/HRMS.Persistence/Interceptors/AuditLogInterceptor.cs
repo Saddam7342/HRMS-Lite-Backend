@@ -1,6 +1,5 @@
 using System.Text.Json;
 using HRMS.Application.Common.Interfaces;
-using HRMS.Domain.Common.Interfaces;
 using HRMS.Domain.Entities;
 using HRMS.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -9,16 +8,21 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace HRMS.Persistence.Interceptors;
 
+/// <summary>
+/// Automatically captures audit log entries for key entity changes.
+/// Single-company HRMS — no TenantId stamping on audit logs.
+/// </summary>
 public class AuditLogInterceptor(
     ICurrentUserService currentUserService,
     IDateTimeProvider dateTimeProvider) : SaveChangesInterceptor
 {
-    private static readonly string[] ExcludedFields = ["PasswordHash", "RefreshToken", "SecurityStamp", "ConcurrencyStamp"];
-    private static readonly string[] AuditableEntities = 
+    private static readonly string[] ExcludedFields =
+        ["PasswordHash", "RefreshToken", "SecurityStamp", "ConcurrencyStamp"];
+
+    private static readonly string[] AuditableEntities =
     [
-        "Employee", "Department", "LeaveRequest", "ExpenseClaim", 
-        "TravelRequest", "AttendanceRecord", "Organization", "AppUser", "Role",
-        "Document", "OrganizationSetting", "Payroll", "SalaryStructure"
+        "Employee", "Department", "LeaveRequest", "ExpenseClaim",
+        "TravelRequest", "AttendanceRecord", "AppUser", "Role", "Document"
     ];
 
     public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
@@ -31,9 +35,7 @@ public class AuditLogInterceptor(
 
         var auditEntries = CaptureAuditEntries(context);
         if (auditEntries.Count > 0)
-        {
             await context.Set<AuditLog>().AddRangeAsync(auditEntries, cancellationToken);
-        }
 
         return await base.SavingChangesAsync(eventData, result, cancellationToken);
     }
@@ -48,18 +50,15 @@ public class AuditLogInterceptor(
         foreach (var entry in entries)
         {
             var entityName = entry.Entity.GetType().Name;
-            
-            // Basic filtering to avoid logging noise
             if (!AuditableEntities.Contains(entityName)) continue;
             if (entry.Entity is AuditLog) continue;
 
             var auditLog = new AuditLog
             {
-                Id = Guid.NewGuid(),
+                Id         = Guid.NewGuid(),
                 EntityName = entityName,
-                UserId = currentUserService.UserId,
-                CreatedAt = dateTimeProvider.UtcNow,
-                TenantId = (entry.Entity as ITenantEntity)?.TenantId ?? Guid.Empty,
+                UserId     = currentUserService.UserId,
+                CreatedAt  = dateTimeProvider.UtcNow,
                 ActionType = MapActionType(entry.State)
             };
 
@@ -106,9 +105,9 @@ public class AuditLogInterceptor(
 
     private static AuditActionType MapActionType(EntityState state) => state switch
     {
-        EntityState.Added => AuditActionType.Create,
+        EntityState.Added    => AuditActionType.Create,
         EntityState.Modified => AuditActionType.Update,
-        EntityState.Deleted => AuditActionType.Delete,
-        _ => AuditActionType.System
+        EntityState.Deleted  => AuditActionType.Delete,
+        _                    => AuditActionType.System
     };
 }

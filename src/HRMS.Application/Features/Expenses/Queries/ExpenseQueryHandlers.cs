@@ -15,7 +15,6 @@ public record GetExpenseClaimByIdQuery(Guid Id) : IRequest<Result<ExpenseClaimDt
 public class ExpenseQueryHandlers(
     IUnitOfWork unitOfWork,
     ICurrentUserService currentUserService,
-    ITenantContext tenantContext,
     IMapper mapper) 
     : IRequestHandler<GetMyExpenseClaimsQuery, Result<IReadOnlyList<ExpenseClaimDto>>>,
       IRequestHandler<GetPendingExpenseApprovalsQuery, Result<IReadOnlyList<ExpenseClaimDto>>>,
@@ -52,7 +51,7 @@ public class ExpenseQueryHandlers(
 
     public async Task<Result<IReadOnlyList<ExpenseCategoryDto>>> Handle(GetExpenseCategoriesQuery request, CancellationToken cancellationToken)
     {
-        var categories = await unitOfWork.ExpenseCategories.GetAllActiveAsync(tenantContext.TenantId, cancellationToken);
+        var categories = await unitOfWork.ExpenseCategories.GetAllActiveAsync(cancellationToken);
         return Result<IReadOnlyList<ExpenseCategoryDto>>.Success(mapper.Map<IReadOnlyList<ExpenseCategoryDto>>(categories));
     }
 

@@ -38,8 +38,7 @@ public class NotificationCommandHandlers(
             Message = request.Message,
             Type = request.Type,
             RelatedEntityId = request.RelatedEntityId,
-            RelatedEntityType = request.RelatedEntityType,
-            TenantId = user.OrganizationId
+            RelatedEntityType = request.RelatedEntityType
         };
 
         await unitOfWork.Notifications.AddAsync(notification, cancellationToken);

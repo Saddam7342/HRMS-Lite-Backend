@@ -53,8 +53,7 @@ public class CreateExpenseClaimHandler(
             Amount = request.Amount,
             ExpenseDate = request.ExpenseDate,
             Status = ExpenseClaimStatus.Pending,
-            SubmittedAt = dateTimeProvider.UtcNow,
-            TenantId = employee.TenantId
+            SubmittedAt = dateTimeProvider.UtcNow
         };
 
         await unitOfWork.ExpenseClaims.AddAsync(claim, cancellationToken);

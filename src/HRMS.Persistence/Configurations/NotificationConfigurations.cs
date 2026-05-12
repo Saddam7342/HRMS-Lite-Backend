@@ -23,7 +23,6 @@ public class NotificationConfiguration :
 
         builder.HasIndex(x => new { x.UserId, x.IsRead });
         builder.HasIndex(x => x.CreatedAt);
-        builder.HasIndex(x => x.TenantId);
     }
 
     public void Configure(EntityTypeBuilder<NotificationPreferences> builder)
@@ -36,6 +35,5 @@ public class NotificationConfiguration :
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(x => x.UserId).IsUnique();
-        builder.HasIndex(x => x.TenantId);
     }
 }

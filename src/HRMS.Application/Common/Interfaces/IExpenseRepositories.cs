@@ -1,6 +1,5 @@
 using HRMS.Application.Common.Interfaces.Repositories;
 using HRMS.Domain.Entities;
-using HRMS.Domain.Enums;
 
 namespace HRMS.Application.Common.Interfaces;
 
@@ -14,6 +13,6 @@ public interface IExpenseClaimRepository : IGenericRepository<ExpenseClaim>
 
 public interface IExpenseCategoryRepository : IGenericRepository<ExpenseCategory>
 {
-    Task<IReadOnlyList<ExpenseCategory>> GetAllActiveAsync(Guid tenantId, CancellationToken ct = default);
-    Task<bool> CodeExistsAsync(string code, Guid tenantId, CancellationToken ct = default);
+    Task<IReadOnlyList<ExpenseCategory>> GetAllActiveAsync(CancellationToken ct = default);
+    Task<bool> CodeExistsAsync(string code, CancellationToken ct = default);
 }

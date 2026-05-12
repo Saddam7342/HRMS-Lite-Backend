@@ -26,6 +26,5 @@ public class TravelRequestConfiguration : IEntityTypeConfiguration<TravelRequest
 
         builder.HasIndex(x => new { x.EmployeeId, x.Status });
         builder.HasIndex(x => new { x.FromDate, x.ToDate });
-        builder.HasIndex(x => x.TenantId);
     }
 }

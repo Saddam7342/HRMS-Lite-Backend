@@ -25,7 +25,6 @@ public class GetCurrentUserHandler(
             user.Username,
             user.FirstName,
             user.LastName,
-            user.OrganizationId,
             user.UserRoles.Select(r => r.Role.Name).ToList(),
             user.UserRoles.SelectMany(r => r.Role.RolePermissions).Select(p => p.Permission.Code).Distinct().ToList()
         );

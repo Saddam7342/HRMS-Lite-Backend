@@ -17,15 +17,9 @@ public class UserRepository(AppDbContext context) : GenericRepository<AppUser>(c
         return await _dbSet.FirstOrDefaultAsync(x => x.Username == username, ct);
     }
 
-    public async Task<AppUser?> GetByEmailAndTenantAsync(string email, Guid organizationId, CancellationToken ct = default)
-    {
-        return await _dbSet.IgnoreQueryFilters() // Usually login needs to be cross-tenant if we don't have slug yet
-            .FirstOrDefaultAsync(x => x.Email == email && x.OrganizationId == organizationId, ct);
-    }
-
     public async Task<AppUser?> GetWithRolesAndPermissionsAsync(string usernameOrEmail, CancellationToken ct = default)
     {
-        return await _dbSet.IgnoreQueryFilters()
+        return await _dbSet
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
                     .ThenInclude(r => r.RolePermissions)
@@ -35,14 +29,13 @@ public class UserRepository(AppDbContext context) : GenericRepository<AppUser>(c
 
     public async Task<AppUser?> GetWithRefreshTokensAsync(Guid userId, CancellationToken ct = default)
     {
-        return await _dbSet.IgnoreQueryFilters()
+        return await _dbSet
             .Include(u => u.RefreshTokens)
             .FirstOrDefaultAsync(x => x.Id == userId, ct);
     }
 
-    public async Task<bool> EmailExistsAsync(string email, Guid organizationId, CancellationToken ct = default)
+    public async Task<bool> EmailExistsAsync(string email, CancellationToken ct = default)
     {
-        return await _dbSet.IgnoreQueryFilters()
-            .AnyAsync(x => x.Email == email && x.OrganizationId == organizationId, ct);
+        return await _dbSet.AnyAsync(x => x.Email == email, ct);
     }
 }

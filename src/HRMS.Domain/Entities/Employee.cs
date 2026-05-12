@@ -5,9 +5,9 @@ namespace HRMS.Domain.Entities;
 
 /// <summary>
 /// Employee profile linked to an AppUser.
-/// Contains HR-specific data. Scoped to a tenant via TenantEntity.
+/// Contains HR-specific data. Single-company — no tenant scoping.
 /// </summary>
-public class Employee : TenantEntity
+public class Employee : AuditableEntity
 {
     public string EmployeeCode { get; set; } = string.Empty;
     public string FirstName { get; set; } = string.Empty;
@@ -15,17 +15,17 @@ public class Employee : TenantEntity
     public string Email { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }
     public string? ProfileImageUrl { get; set; }
-    
+
     public Gender Gender { get; set; }
     public DateTime DateOfBirth { get; set; }
     public DateTime HireDate { get; set; }
     public string? Designation { get; set; }
     public EmployeeStatus Status { get; set; } = EmployeeStatus.Active;
-    
+
     public string? Address { get; set; }
     public string? EmergencyContactName { get; set; }
     public string? EmergencyContactPhone { get; set; }
-    
+
     public bool IsActive { get; set; } = true;
 
     // FK relations

@@ -8,14 +8,10 @@ namespace HRMS.Persistence.Repositories;
 public class EmployeeRepository(AppDbContext context) : GenericRepository<Employee>(context), IEmployeeRepository
 {
     public async Task<Employee?> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
-    {
-        return await _dbSet.FirstOrDefaultAsync(x => x.UserId == userId, ct);
-    }
+        => await _dbSet.FirstOrDefaultAsync(x => x.UserId == userId, ct);
 
     public async Task<Employee?> GetByEmployeeCodeAsync(string code, CancellationToken ct = default)
-    {
-        return await _dbSet.FirstOrDefaultAsync(x => x.EmployeeCode == code, ct);
-    }
+        => await _dbSet.FirstOrDefaultAsync(x => x.EmployeeCode == code, ct);
 
     public async Task<Employee?> GetWithUserAndDepartmentAsync(Guid id, CancellationToken ct = default)
     {
@@ -27,26 +23,14 @@ public class EmployeeRepository(AppDbContext context) : GenericRepository<Employ
     }
 
     public async Task<IReadOnlyList<Employee>> GetByDepartmentAsync(Guid departmentId, CancellationToken ct = default)
-    {
-        return await _dbSet
-            .Where(x => x.DepartmentId == departmentId)
-            .ToListAsync(ct);
-    }
+        => await _dbSet.Where(x => x.DepartmentId == departmentId).ToListAsync(ct);
 
     public async Task<IReadOnlyList<Employee>> GetDirectReportsAsync(Guid managerId, CancellationToken ct = default)
-    {
-        return await _dbSet
-            .Where(x => x.ManagerId == managerId)
-            .ToListAsync(ct);
-    }
+        => await _dbSet.Where(x => x.ManagerId == managerId).ToListAsync(ct);
 
-    public async Task<bool> CodeExistsAsync(string code, Guid tenantId, CancellationToken ct = default)
-    {
-        return await _dbSet.AnyAsync(x => x.EmployeeCode == code && x.TenantId == tenantId, ct);
-    }
+    public async Task<bool> CodeExistsAsync(string code, CancellationToken ct = default)
+        => await _dbSet.AnyAsync(x => x.EmployeeCode == code, ct);
 
-    public async Task<int> GetCountByTenantAsync(Guid tenantId, CancellationToken ct = default)
-    {
-        return await _dbSet.CountAsync(x => x.TenantId == tenantId && x.IsActive, ct);
-    }
+    public async Task<int> GetActiveCountAsync(CancellationToken ct = default)
+        => await _dbSet.CountAsync(x => x.IsActive, ct);
 }

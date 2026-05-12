@@ -2,15 +2,12 @@ using HRMS.Domain.Common;
 
 namespace HRMS.Domain.Entities;
 
-public class Department : TenantEntity
+public class Department : AuditableEntity
 {
     public string Name { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;
     public string? Description { get; set; }
     public bool IsActive { get; set; } = true;
-
-    // Organization
-    public Organization Organization { get; set; } = null!;
 
     // Hierarchy
     public Guid? ParentDepartmentId { get; set; }

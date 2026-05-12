@@ -1,6 +1,6 @@
 namespace HRMS.Application.Features.Auth.DTOs;
 
-public record LoginRequest(string EmailOrUsername, string Password, Guid OrganizationId);
+public record LoginRequest(string EmailOrUsername, string Password);
 
 public record TokenDto(string AccessToken, string RefreshToken, DateTime ExpiresAt);
 
@@ -18,7 +18,6 @@ public record CurrentUserDto(
     string Username,
     string FirstName,
     string LastName,
-    Guid OrganizationId,
     List<string> Roles,
     List<string> Permissions);
 

@@ -8,9 +8,6 @@ using HRMS.Application.Features.Employees.DTOs;
 using HRMS.Application.Features.Expenses.DTOs;
 using HRMS.Application.Features.Leaves.DTOs;
 using HRMS.Application.Features.Notifications.DTOs;
-using HRMS.Application.Features.Organizations.DTOs;
-using HRMS.Application.Features.Payroll.DTOs;
-using HRMS.Application.Features.Settings.DTOs;
 using HRMS.Application.Features.Travel.DTOs;
 using HRMS.Domain.Entities;
 
@@ -20,10 +17,6 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        // Organization
-        CreateMap<Organization, OrganizationDto>();
-        CreateMap<Organization, OrganizationBrandingDto>();
-
         // Employee
         CreateMap<Employee, EmployeeDto>()
             .ForMember(d => d.DepartmentName, opt => opt.MapFrom(s => s.Department != null ? s.Department.Name : null))
@@ -101,22 +94,9 @@ public class MappingProfile : Profile
         CreateMap<AuditLog, AuditLogDto>()
             .ForMember(d => d.UserName, opt => opt.MapFrom(s => s.User != null ? $"{s.User.FirstName} {s.User.LastName}" : "System"));
 
-        // Settings
-        CreateMap<OrganizationSetting, OrganizationSettingDto>();
-
         // Document
         CreateMap<Document, DocumentDto>()
             .ForMember(d => d.EmployeeName, opt => opt.MapFrom(s => s.Employee != null ? $"{s.Employee.FirstName} {s.Employee.LastName}" : null))
             .ForMember(d => d.UploadedByName, opt => opt.MapFrom(s => $"{s.UploadedBy.FirstName} {s.UploadedBy.LastName}"));
-
-        // Payroll
-        CreateMap<SalaryStructure, SalaryStructureDto>()
-            .ForMember(d => d.EmployeeName, opt => opt.MapFrom(s => $"{s.Employee.FirstName} {s.Employee.LastName}"))
-            .ForMember(d => d.Allowances, opt => opt.MapFrom(s => JsonSerializer.Deserialize<List<AllowanceModel>>(s.Allowances, (JsonSerializerOptions)null!) ?? new List<AllowanceModel>()))
-            .ForMember(d => d.Deductions, opt => opt.MapFrom(s => JsonSerializer.Deserialize<List<DeductionModel>>(s.Deductions, (JsonSerializerOptions)null!) ?? new List<DeductionModel>()));
-
-        CreateMap<Payroll, PayrollDto>()
-            .ForMember(d => d.EmployeeName, opt => opt.MapFrom(s => $"{s.Employee.FirstName} {s.Employee.LastName}"))
-            .ForMember(d => d.ApproverName, opt => opt.MapFrom(s => s.ApprovedBy != null ? $"{s.ApprovedBy.FirstName} {s.ApprovedBy.LastName}" : null));
     }
 }

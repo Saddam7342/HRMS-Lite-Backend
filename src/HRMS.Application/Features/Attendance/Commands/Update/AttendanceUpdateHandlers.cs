@@ -28,7 +28,7 @@ public class AttendanceUpdateHandlers(
         if (attendance == null) return Result.Failure("Attendance record not found.");
 
         // Security: Admin only for override
-        if (!currentUserService.Roles.Contains("PlatformAdmin") && !currentUserService.Roles.Contains("OrganizationAdmin"))
+        if (!currentUserService.Roles.Contains("Admin"))
             return Result.Failure("Unauthorized. Only administrators can override attendance records.");
 
         attendance.CheckInTime = request.CheckInTime;
@@ -59,7 +59,6 @@ public class AttendanceUpdateHandlers(
             EmployeeId = request.EmployeeId,
             Date = request.Date.Date,
             Status = AttendanceStatus.Absent,
-            TenantId = employee.TenantId,
             Notes = "Marked absent by administrator."
         };
 

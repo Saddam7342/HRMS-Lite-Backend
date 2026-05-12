@@ -2,7 +2,7 @@ using HRMS.Domain.Common;
 
 namespace HRMS.Domain.Entities;
 
-public class ExpenseCategory : TenantEntity
+public class ExpenseCategory : AuditableEntity
 {
     public string Name { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;

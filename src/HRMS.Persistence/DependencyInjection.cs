@@ -18,14 +18,16 @@ public static class DependencyInjection
         services.AddScoped<ISaveChangesInterceptor, SoftDeleteInterceptor>();
         services.AddScoped<ISaveChangesInterceptor, AuditLogInterceptor>();
 
-        services.AddDbContext<AppDbContext>((sp, options) => {
+        services.AddDbContext<AppDbContext>((sp, options) =>
+        {
             var connectionString = configuration.GetConnectionString("DefaultConnection");
-            options.UseSqlServer(connectionString, sqlOptions => {
+            options.UseSqlServer(connectionString, sqlOptions =>
+            {
                 sqlOptions.EnableRetryOnFailure(
                     maxRetryCount: 5,
                     maxRetryDelay: TimeSpan.FromSeconds(30),
                     errorNumbersToAdd: null);
-                sqlOptions.CommandTimeout(60); // 60 seconds
+                sqlOptions.CommandTimeout(60);
             });
             options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
         });
@@ -34,11 +36,10 @@ public static class DependencyInjection
 
         // Repositories
         services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-        services.AddScoped<IOrganizationRepository, OrganizationRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();
-        
+
         services.AddScoped<ILeaveTypeRepository, LeaveTypeRepository>();
         services.AddScoped<ILeaveBalanceRepository, LeaveBalanceRepository>();
         services.AddScoped<ILeaveRequestRepository, LeaveRequestRepository>();
@@ -47,7 +48,7 @@ public static class DependencyInjection
         services.AddScoped<IExpenseClaimRepository, ExpenseClaimRepository>();
 
         services.AddScoped<ITravelRequestRepository, TravelRequestRepository>();
-        
+
         services.AddScoped<IAttendanceRepository, AttendanceRepository>();
 
         services.AddScoped<INotificationRepository, NotificationRepository>();
@@ -55,11 +56,7 @@ public static class DependencyInjection
 
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 
-        services.AddScoped<IOrganizationSettingRepository, OrganizationSettingRepository>();
-
         services.AddScoped<IDocumentRepository, DocumentRepository>();
-
-        services.AddScoped<IPayrollRepository, PayrollRepository>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 

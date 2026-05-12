@@ -12,8 +12,7 @@ public record UploadNewVersionCommand(Guid Id, IFormFile File) : IRequest<Result
 
 public class DocumentMaintenanceHandlers(
     IUnitOfWork unitOfWork,
-    IFileStorageService fileStorageService,
-    ITenantContext tenantContext) 
+    IFileStorageService fileStorageService) 
     : IRequestHandler<DeleteDocumentCommand, Result>,
       IRequestHandler<UpdateDocumentCommand, Result>,
       IRequestHandler<UploadNewVersionCommand, Result>
@@ -51,8 +50,8 @@ public class DocumentMaintenanceHandlers(
             return Result.Failure($"New version must have the same file type ({document.FileType}).");
 
         // 1. Upload new file
-        var subDir = document.DocumentType == DocumentType.Employee ? "employees" : "organization";
-        var path = $"documents/{tenantContext.TenantId}/{subDir}/{Guid.NewGuid()}{extension}";
+        var subDir = document.DocumentType == DocumentType.Employee ? "employees" : "company";
+        var path = $"documents/{subDir}/{Guid.NewGuid()}{extension}";
         
         using var stream = request.File.OpenReadStream();
         var newPath = await fileStorageService.UploadAsync(stream, path, request.File.ContentType, cancellationToken);

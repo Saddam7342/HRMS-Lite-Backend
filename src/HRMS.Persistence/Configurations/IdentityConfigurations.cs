@@ -15,9 +15,8 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
         builder.Property(x => x.Email).IsRequired().HasMaxLength(255);
         builder.Property(x => x.Username).IsRequired().HasMaxLength(100);
 
-        // Unique constraints per tenant
-        builder.HasIndex(x => new { x.Email, x.OrganizationId }).IsUnique();
-        builder.HasIndex(x => new { x.Username, x.OrganizationId }).IsUnique();
+        builder.HasIndex(x => x.Email).IsUnique();
+        builder.HasIndex(x => x.Username).IsUnique();
 
         builder.HasMany(x => x.UserRoles)
             .WithOne(x => x.User)

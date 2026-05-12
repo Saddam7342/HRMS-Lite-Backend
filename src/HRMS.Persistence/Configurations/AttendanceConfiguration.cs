@@ -23,7 +23,6 @@ public class AttendanceConfiguration : IEntityTypeConfiguration<AttendanceRecord
         builder.HasIndex(x => new { x.EmployeeId, x.Date }).IsUnique();
         
         builder.HasIndex(x => x.Date);
-        builder.HasIndex(x => x.TenantId);
         builder.HasIndex(x => x.Status);
     }
 }

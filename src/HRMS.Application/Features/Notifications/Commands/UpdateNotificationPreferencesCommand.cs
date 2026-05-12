@@ -29,8 +29,7 @@ public class UpdateNotificationPreferencesHandler(
             var user = await unitOfWork.Users.GetByIdAsync(userId.Value, cancellationToken);
             prefs = new NotificationPreferences
             {
-                UserId = userId.Value,
-                TenantId = user?.OrganizationId ?? Guid.Empty
+                UserId = userId.Value
             };
             await unitOfWork.NotificationPreferences.AddAsync(prefs, cancellationToken);
         }

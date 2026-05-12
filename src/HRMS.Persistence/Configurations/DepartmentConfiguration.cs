@@ -14,9 +14,8 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
         builder.Property(x => x.Code).IsRequired().HasMaxLength(50);
         builder.Property(x => x.Description).HasMaxLength(500);
 
-        // Unique constraints per tenant
-        builder.HasIndex(x => new { x.Name, x.TenantId }).IsUnique();
-        builder.HasIndex(x => new { x.Code, x.TenantId }).IsUnique();
+        builder.HasIndex(x => x.Name).IsUnique();
+        builder.HasIndex(x => x.Code).IsUnique();
 
         // Hierarchy (Self-reference)
         builder.HasOne(x => x.ParentDepartment)
@@ -29,8 +28,5 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
             .WithMany()
             .HasForeignKey(x => x.DepartmentHeadId)
             .OnDelete(DeleteBehavior.SetNull);
-
-        // Tenant relationship
-        builder.HasIndex(x => x.TenantId);
     }
 }

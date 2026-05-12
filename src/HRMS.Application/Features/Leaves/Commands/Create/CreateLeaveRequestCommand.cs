@@ -67,8 +67,7 @@ public class CreateLeaveRequestHandler(
             EndDate = request.EndDate,
             TotalDays = totalDays,
             Reason = request.Reason,
-            Status = LeaveRequestStatus.Pending,
-            TenantId = employee.TenantId
+            Status = LeaveRequestStatus.Pending
         };
 
         await unitOfWork.LeaveRequests.AddAsync(leaveRequest, cancellationToken);

@@ -14,8 +14,7 @@ public class LeaveConfiguration :
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Name).IsRequired().HasMaxLength(100);
         builder.Property(x => x.Code).IsRequired().HasMaxLength(50);
-        builder.HasIndex(x => new { x.Code, x.TenantId }).IsUnique();
-        builder.HasIndex(x => x.TenantId);
+        builder.HasIndex(x => x.Code).IsUnique();
     }
 
     public void Configure(EntityTypeBuilder<LeaveBalance> builder)
@@ -24,7 +23,7 @@ public class LeaveConfiguration :
         builder.Property(x => x.TotalDays).HasPrecision(18, 2);
         builder.Property(x => x.UsedDays).HasPrecision(18, 2);
         
-        builder.HasIndex(x => new { x.EmployeeId, x.LeaveTypeId, x.Year, x.TenantId }).IsUnique();
+        builder.HasIndex(x => new { x.EmployeeId, x.LeaveTypeId, x.Year }).IsUnique();
 
         builder.HasOne(x => x.Employee)
             .WithMany()
@@ -35,8 +34,6 @@ public class LeaveConfiguration :
             .WithMany(x => x.LeaveBalances)
             .HasForeignKey(x => x.LeaveTypeId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasIndex(x => x.TenantId);
     }
 
     public void Configure(EntityTypeBuilder<LeaveRequest> builder)
@@ -63,6 +60,5 @@ public class LeaveConfiguration :
 
         builder.HasIndex(x => new { x.EmployeeId, x.Status });
         builder.HasIndex(x => new { x.StartDate, x.EndDate });
-        builder.HasIndex(x => x.TenantId);
     }
 }

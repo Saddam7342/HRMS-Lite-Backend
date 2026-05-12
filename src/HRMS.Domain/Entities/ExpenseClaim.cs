@@ -3,7 +3,7 @@ using HRMS.Domain.Enums;
 
 namespace HRMS.Domain.Entities;
 
-public class ExpenseClaim : TenantEntity
+public class ExpenseClaim : AuditableEntity
 {
     public Guid EmployeeId { get; set; }
     public Employee Employee { get; set; } = null!;

@@ -18,9 +18,8 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
         builder.Property(x => x.Designation).HasMaxLength(100);
         builder.Property(x => x.ProfileImageUrl).HasMaxLength(500);
 
-        // Unique constraints per tenant
-        builder.HasIndex(x => new { x.EmployeeCode, x.TenantId }).IsUnique();
-        builder.HasIndex(x => new { x.Email, x.TenantId }).IsUnique();
+        builder.HasIndex(x => x.EmployeeCode).IsUnique();
+        builder.HasIndex(x => x.Email).IsUnique();
 
         // One-to-one with AppUser
         builder.HasOne(x => x.User)
@@ -39,8 +38,5 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
             .WithMany(x => x.Employees)
             .HasForeignKey(x => x.DepartmentId)
             .OnDelete(DeleteBehavior.SetNull);
-
-        // Tenant relationship
-        builder.HasIndex(x => x.TenantId);
     }
 }

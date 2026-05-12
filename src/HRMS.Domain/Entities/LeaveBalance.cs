@@ -2,7 +2,7 @@ using HRMS.Domain.Common;
 
 namespace HRMS.Domain.Entities;
 
-public class LeaveBalance : TenantEntity
+public class LeaveBalance : AuditableEntity
 {
     public Guid EmployeeId { get; set; }
     public Employee Employee { get; set; } = null!;
@@ -13,6 +13,6 @@ public class LeaveBalance : TenantEntity
     public decimal TotalDays { get; set; }
     public decimal UsedDays { get; set; }
     public decimal RemainingDays => TotalDays - UsedDays;
-    
+
     public int Year { get; set; }
 }

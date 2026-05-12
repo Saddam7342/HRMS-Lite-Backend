@@ -8,14 +8,14 @@ namespace HRMS.Persistence.Repositories;
 
 public class ExpenseCategoryRepository(AppDbContext context) : GenericRepository<ExpenseCategory>(context), IExpenseCategoryRepository
 {
-    public async Task<IReadOnlyList<ExpenseCategory>> GetAllActiveAsync(Guid tenantId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<ExpenseCategory>> GetAllActiveAsync(CancellationToken ct = default)
     {
-        return await _dbSet.Where(x => x.IsActive && x.TenantId == tenantId).ToListAsync(ct);
+        return await _dbSet.Where(x => x.IsActive).ToListAsync(ct);
     }
 
-    public async Task<bool> CodeExistsAsync(string code, Guid tenantId, CancellationToken ct = default)
+    public async Task<bool> CodeExistsAsync(string code, CancellationToken ct = default)
     {
-        return await _dbSet.AnyAsync(x => x.Code == code && x.TenantId == tenantId, ct);
+        return await _dbSet.AnyAsync(x => x.Code == code, ct);
     }
 }
 

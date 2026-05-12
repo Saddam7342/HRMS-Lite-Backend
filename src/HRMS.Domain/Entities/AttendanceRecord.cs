@@ -3,7 +3,7 @@ using HRMS.Domain.Enums;
 
 namespace HRMS.Domain.Entities;
 
-public class AttendanceRecord : TenantEntity
+public class AttendanceRecord : AuditableEntity
 {
     public Guid EmployeeId { get; set; }
     public Employee Employee { get; set; } = null!;

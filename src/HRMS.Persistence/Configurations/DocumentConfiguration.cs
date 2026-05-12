@@ -26,7 +26,6 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
             .HasForeignKey(x => x.UploadedById)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(x => x.TenantId);
         builder.HasIndex(x => x.EmployeeId);
         builder.HasIndex(x => x.DocumentType);
         builder.HasIndex(x => x.Category);

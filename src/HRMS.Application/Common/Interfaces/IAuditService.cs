@@ -11,6 +11,5 @@ public interface IAuditService
         string? message = null, 
         object? oldValues = null, 
         object? newValues = null,
-        Guid? tenantId = null,
         CancellationToken ct = default);
 }

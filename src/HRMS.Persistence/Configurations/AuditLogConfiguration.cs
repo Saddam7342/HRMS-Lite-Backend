@@ -19,7 +19,6 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         builder.HasIndex(x => x.EntityId);
         builder.HasIndex(x => x.UserId);
         builder.HasIndex(x => x.CreatedAt);
-        builder.HasIndex(x => x.TenantId);
 
         // Audit logs are usually write-only, but EF Core needs to know how to handle them.
         builder.HasOne(x => x.User)

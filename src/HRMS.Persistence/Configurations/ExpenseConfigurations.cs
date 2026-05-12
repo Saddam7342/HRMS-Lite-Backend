@@ -13,8 +13,7 @@ public class ExpenseConfiguration :
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Name).IsRequired().HasMaxLength(100);
         builder.Property(x => x.Code).IsRequired().HasMaxLength(50);
-        builder.HasIndex(x => new { x.Code, x.TenantId }).IsUnique();
-        builder.HasIndex(x => x.TenantId);
+        builder.HasIndex(x => x.Code).IsUnique();
     }
 
     public void Configure(EntityTypeBuilder<ExpenseClaim> builder)
@@ -43,6 +42,5 @@ public class ExpenseConfiguration :
 
         builder.HasIndex(x => new { x.EmployeeId, x.Status });
         builder.HasIndex(x => x.ExpenseDate);
-        builder.HasIndex(x => x.TenantId);
     }
 }

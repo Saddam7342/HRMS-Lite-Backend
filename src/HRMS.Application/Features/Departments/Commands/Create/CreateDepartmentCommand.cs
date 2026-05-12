@@ -18,12 +18,10 @@ public record CreateDepartmentCommand : IRequest<Result<Guid>>
 public class CreateDepartmentValidator : AbstractValidator<CreateDepartmentCommand>
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ITenantContext _tenantContext;
 
-    public CreateDepartmentValidator(IUnitOfWork unitOfWork, ITenantContext tenantContext)
+    public CreateDepartmentValidator(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
-        _tenantContext = tenantContext;
 
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100)
             .MustAsync(BeUniqueName).WithMessage("Department name already exists.");
@@ -32,7 +30,7 @@ public class CreateDepartmentValidator : AbstractValidator<CreateDepartmentComma
             .MustAsync(BeUniqueCode).WithMessage("Department code already exists.");
 
         RuleFor(x => x.ParentDepartmentId)
-            .MustAsync(ExistAndBelongToTenant).When(x => x.ParentDepartmentId.HasValue)
+            .MustAsync(Exist).When(x => x.ParentDepartmentId.HasValue)
             .WithMessage("Parent department not found.");
 
         RuleFor(x => x.DepartmentHeadId)
@@ -41,12 +39,12 @@ public class CreateDepartmentValidator : AbstractValidator<CreateDepartmentComma
     }
 
     private async Task<bool> BeUniqueName(string name, CancellationToken ct) =>
-        !await _unitOfWork.Departments.NameExistsAsync(name, _tenantContext.TenantId, ct);
+        !await _unitOfWork.Departments.NameExistsAsync(name, ct);
 
     private async Task<bool> BeUniqueCode(string code, CancellationToken ct) =>
-        !await _unitOfWork.Departments.CodeExistsAsync(code, _tenantContext.TenantId, ct);
+        !await _unitOfWork.Departments.CodeExistsAsync(code, ct);
 
-    private async Task<bool> ExistAndBelongToTenant(Guid? id, CancellationToken ct)
+    private async Task<bool> Exist(Guid? id, CancellationToken ct)
     {
         var dept = await _unitOfWork.Departments.GetByIdAsync(id!.Value, ct);
         return dept != null;
@@ -59,9 +57,7 @@ public class CreateDepartmentValidator : AbstractValidator<CreateDepartmentComma
     }
 }
 
-public class CreateDepartmentHandler(
-    IUnitOfWork unitOfWork,
-    ITenantContext tenantContext) : IRequestHandler<CreateDepartmentCommand, Result<Guid>>
+public class CreateDepartmentHandler(IUnitOfWork unitOfWork) : IRequestHandler<CreateDepartmentCommand, Result<Guid>>
 {
     public async Task<Result<Guid>> Handle(CreateDepartmentCommand request, CancellationToken cancellationToken)
     {
@@ -72,7 +68,6 @@ public class CreateDepartmentHandler(
             Description = request.Description,
             ParentDepartmentId = request.ParentDepartmentId,
             DepartmentHeadId = request.DepartmentHeadId,
-            TenantId = tenantContext.TenantId,
             IsActive = true
         };
 

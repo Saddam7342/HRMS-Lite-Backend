@@ -3,7 +3,7 @@ using HRMS.Domain.Enums;
 
 namespace HRMS.Domain.Entities;
 
-public class TravelRequest : TenantEntity
+public class TravelRequest : AuditableEntity
 {
     public Guid EmployeeId { get; set; }
     public Employee Employee { get; set; } = null!;
@@ -13,7 +13,7 @@ public class TravelRequest : TenantEntity
     public DateTime FromDate { get; set; }
     public DateTime ToDate { get; set; }
     public TravelRequestStatus Status { get; set; } = TravelRequestStatus.Pending;
-    
+
     public decimal? EstimatedBudget { get; set; }
 
     // Approval tracking

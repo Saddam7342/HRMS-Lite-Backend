@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260508183402_AddSettingsModule")]
-    partial class AddSettingsModule
+    [Migration("20260512111254_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -76,9 +76,6 @@ namespace HRMS.Persistence.Migrations
                     b.Property<DateTime?>("LockoutEnd")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("OrganizationId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -105,12 +102,10 @@ namespace HRMS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OrganizationId");
-
-                    b.HasIndex("Email", "OrganizationId")
+                    b.HasIndex("Email")
                         .IsUnique();
 
-                    b.HasIndex("Username", "OrganizationId")
+                    b.HasIndex("Username")
                         .IsUnique();
 
                     b.ToTable("Users");
@@ -159,9 +154,6 @@ namespace HRMS.Persistence.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<decimal?>("TotalHours")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -177,8 +169,6 @@ namespace HRMS.Persistence.Migrations
                     b.HasIndex("Date");
 
                     b.HasIndex("Status");
-
-                    b.HasIndex("TenantId");
 
                     b.HasIndex("EmployeeId", "Date")
                         .IsUnique();
@@ -230,9 +220,6 @@ namespace HRMS.Persistence.Migrations
                     b.Property<string>("OldValues")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -253,8 +240,6 @@ namespace HRMS.Persistence.Migrations
                     b.HasIndex("EntityId");
 
                     b.HasIndex("EntityName");
-
-                    b.HasIndex("TenantId");
 
                     b.HasIndex("UserId");
 
@@ -305,9 +290,6 @@ namespace HRMS.Persistence.Migrations
                     b.Property<Guid?>("ParentDepartmentId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -316,19 +298,103 @@ namespace HRMS.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Code")
+                        .IsUnique();
+
                     b.HasIndex("DepartmentHeadId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.HasIndex("ParentDepartmentId");
 
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("Code", "TenantId")
-                        .IsUnique();
-
-                    b.HasIndex("Name", "TenantId")
-                        .IsUnique();
-
                     b.ToTable("Departments");
+                });
+
+            modelBuilder.Entity("HRMS.Domain.Entities.Document", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DocumentType")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FileType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UploadedById")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category");
+
+                    b.HasIndex("DocumentType");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("UploadedById");
+
+                    b.ToTable("Documents");
                 });
 
             modelBuilder.Entity("HRMS.Domain.Entities.Employee", b =>
@@ -414,9 +480,6 @@ namespace HRMS.Persistence.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -430,17 +493,15 @@ namespace HRMS.Persistence.Migrations
 
                     b.HasIndex("DepartmentId");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("EmployeeCode")
+                        .IsUnique();
+
                     b.HasIndex("ManagerId");
 
-                    b.HasIndex("TenantId");
-
                     b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.HasIndex("Email", "TenantId")
-                        .IsUnique();
-
-                    b.HasIndex("EmployeeCode", "TenantId")
                         .IsUnique();
 
                     b.ToTable("Employees");
@@ -483,9 +544,6 @@ namespace HRMS.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -494,9 +552,7 @@ namespace HRMS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("Code", "TenantId")
+                    b.HasIndex("Code")
                         .IsUnique();
 
                     b.ToTable("ExpenseCategories");
@@ -560,9 +616,6 @@ namespace HRMS.Persistence.Migrations
                     b.Property<DateTime?>("SubmittedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -581,8 +634,6 @@ namespace HRMS.Persistence.Migrations
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("ExpenseDate");
-
-                    b.HasIndex("TenantId");
 
                     b.HasIndex("EmployeeId", "Status");
 
@@ -616,9 +667,6 @@ namespace HRMS.Persistence.Migrations
                     b.Property<Guid>("LeaveTypeId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<decimal>("TotalDays")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -640,9 +688,7 @@ namespace HRMS.Persistence.Migrations
 
                     b.HasIndex("LeaveTypeId");
 
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("EmployeeId", "LeaveTypeId", "Year", "TenantId")
+                    b.HasIndex("EmployeeId", "LeaveTypeId", "Year")
                         .IsUnique();
 
                     b.ToTable("LeaveBalances");
@@ -698,9 +744,6 @@ namespace HRMS.Persistence.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<decimal>("TotalDays")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -716,8 +759,6 @@ namespace HRMS.Persistence.Migrations
                     b.HasIndex("ApprovedById");
 
                     b.HasIndex("LeaveTypeId");
-
-                    b.HasIndex("TenantId");
 
                     b.HasIndex("EmployeeId", "Status");
 
@@ -772,9 +813,6 @@ namespace HRMS.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -783,9 +821,7 @@ namespace HRMS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("Code", "TenantId")
+                    b.HasIndex("Code")
                         .IsUnique();
 
                     b.ToTable("LeaveTypes");
@@ -828,9 +864,6 @@ namespace HRMS.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -851,8 +884,6 @@ namespace HRMS.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedAt");
-
-                    b.HasIndex("TenantId");
 
                     b.HasIndex("UserId", "IsRead");
 
@@ -895,9 +926,6 @@ namespace HRMS.Persistence.Migrations
                     b.Property<bool>("LeaveNotifications")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<bool>("TravelNotifications")
                         .HasColumnType("bit");
 
@@ -912,157 +940,10 @@ namespace HRMS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId");
-
                     b.HasIndex("UserId")
                         .IsUnique();
 
                     b.ToTable("NotificationPreferences");
-                });
-
-            modelBuilder.Entity("HRMS.Domain.Entities.Organization", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Address")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("LogoUrl")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<int>("MaxEmployeeSlots")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("PrimaryColor")
-                        .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)");
-
-                    b.Property<string>("SecondaryColor")
-                        .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)");
-
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Email")
-                        .IsUnique();
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.HasIndex("Slug")
-                        .IsUnique();
-
-                    b.ToTable("Organizations");
-                });
-
-            modelBuilder.Entity("HRMS.Domain.Entities.OrganizationSetting", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("DataType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsEditable")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Key")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Key");
-
-                    b.HasIndex("TenantId", "Key")
-                        .IsUnique();
-
-                    b.ToTable("OrganizationSettings");
                 });
 
             modelBuilder.Entity("HRMS.Domain.Entities.Permission", b =>
@@ -1229,9 +1110,6 @@ namespace HRMS.Persistence.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime>("ToDate")
                         .HasColumnType("datetime2");
 
@@ -1244,8 +1122,6 @@ namespace HRMS.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ApprovedById");
-
-                    b.HasIndex("TenantId");
 
                     b.HasIndex("EmployeeId", "Status");
 
@@ -1267,17 +1143,6 @@ namespace HRMS.Persistence.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("UserRoles");
-                });
-
-            modelBuilder.Entity("HRMS.Domain.Entities.AppUser", b =>
-                {
-                    b.HasOne("HRMS.Domain.Entities.Organization", "Organization")
-                        .WithMany("Users")
-                        .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Organization");
                 });
 
             modelBuilder.Entity("HRMS.Domain.Entities.AttendanceRecord", b =>
@@ -1313,17 +1178,27 @@ namespace HRMS.Persistence.Migrations
                         .HasForeignKey("ParentDepartmentId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("HRMS.Domain.Entities.Organization", "Organization")
-                        .WithMany("Departments")
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("DepartmentHead");
 
-                    b.Navigation("Organization");
-
                     b.Navigation("ParentDepartment");
+                });
+
+            modelBuilder.Entity("HRMS.Domain.Entities.Document", b =>
+                {
+                    b.HasOne("HRMS.Domain.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HRMS.Domain.Entities.AppUser", "UploadedBy")
+                        .WithMany()
+                        .HasForeignKey("UploadedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("UploadedBy");
                 });
 
             modelBuilder.Entity("HRMS.Domain.Entities.Employee", b =>
@@ -1550,13 +1425,6 @@ namespace HRMS.Persistence.Migrations
                     b.Navigation("LeaveBalances");
 
                     b.Navigation("LeaveRequests");
-                });
-
-            modelBuilder.Entity("HRMS.Domain.Entities.Organization", b =>
-                {
-                    b.Navigation("Departments");
-
-                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("HRMS.Domain.Entities.Permission", b =>

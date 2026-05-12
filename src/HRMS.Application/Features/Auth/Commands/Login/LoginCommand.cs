@@ -9,7 +9,7 @@ using MediatR;
 
 namespace HRMS.Application.Features.Auth.Commands.Login;
 
-public record LoginCommand(string EmailOrUsername, string Password, Guid? OrganizationId = null, string? Slug = null) : IRequest<Result<LoginResponse>>;
+public record LoginCommand(string EmailOrUsername, string Password) : IRequest<Result<LoginResponse>>;
 
 public class LoginValidator : AbstractValidator<LoginCommand>
 {
@@ -25,8 +25,7 @@ public class LoginHandler(
     IJwtTokenService jwtTokenService,
     IPasswordHasher passwordHasher,
     IDateTimeProvider dateTimeProvider,
-    IAuditService auditService,
-    ITenantContext tenantContext) : IRequestHandler<LoginCommand, Result<LoginResponse>>
+    IAuditService auditService) : IRequestHandler<LoginCommand, Result<LoginResponse>>
 {
     public async Task<Result<LoginResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
@@ -36,18 +35,6 @@ public class LoginHandler(
 
             if (user == null)
                 return Result<LoginResponse>.Failure("Invalid credentials.");
-
-            // Resolve OrganizationId from Slug if provided
-            if (!string.IsNullOrEmpty(request.Slug))
-            {
-                var org = await unitOfWork.Organizations.GetBySlugAsync(request.Slug, cancellationToken);
-                if (org == null || user.OrganizationId != org.Id)
-                    return Result<LoginResponse>.Failure("Invalid credentials.");
-            }
-            else if (request.OrganizationId.HasValue && request.OrganizationId.Value != user.OrganizationId)
-            {
-                return Result<LoginResponse>.Failure("Invalid credentials.");
-            }
 
             if (!user.IsActive)
                 return Result<LoginResponse>.Failure("Account is deactivated.");
@@ -67,13 +54,9 @@ public class LoginHandler(
                 return Result<LoginResponse>.Failure("Invalid credentials.");
             }
 
-            // 100% Safe Login: We verify the user and return the token immediately.
-            // We skip updating LastLoginAt/RefreshTokens for now to avoid persistent 
-            // multi-tenant filter conflicts in the production environment.
             var accessToken = jwtTokenService.GenerateAccessToken(user);
             var refreshTokenStr = jwtTokenService.GenerateRefreshToken();
 
-            // We use a dummy expiry for the refresh token since we aren't persisting it yet
             var refreshTokenExpires = dateTimeProvider.UtcNow.AddDays(7);
 
             var roles = user.UserRoles

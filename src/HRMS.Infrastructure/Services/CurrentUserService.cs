@@ -5,15 +5,18 @@ using Microsoft.AspNetCore.Http;
 
 namespace HRMS.Infrastructure.Services;
 
+/// <summary>
+/// Reads the current user's identity from JWT claims.
+/// Single-company HRMS — no TenantId claim.
+/// </summary>
 public class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICurrentUserService
 {
     private readonly ClaimsPrincipal? _user = httpContextAccessor.HttpContext?.User;
 
     public Guid? UserId => GetGuidClaim(AppClaimTypes.UserId);
-    public Guid? TenantId => GetGuidClaim(AppClaimTypes.TenantId);
     public string? Email => _user?.FindFirstValue(ClaimTypes.Email);
     public string? Username => _user?.FindFirstValue(AppClaimTypes.Username);
-    
+
     public IReadOnlyList<string> Roles => _user?.FindAll(ClaimTypes.Role)
         .Select(c => c.Value).ToList() ?? [];
 

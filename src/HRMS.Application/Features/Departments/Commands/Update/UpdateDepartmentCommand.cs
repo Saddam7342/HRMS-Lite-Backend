@@ -19,12 +19,10 @@ public record UpdateDepartmentCommand : IRequest<Result>
 public class UpdateDepartmentValidator : AbstractValidator<UpdateDepartmentCommand>
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ITenantContext _tenantContext;
 
-    public UpdateDepartmentValidator(IUnitOfWork unitOfWork, ITenantContext tenantContext)
+    public UpdateDepartmentValidator(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
-        _tenantContext = tenantContext;
 
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Code).NotEmpty().MaximumLength(50);

@@ -18,14 +18,7 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<IEmailService, EmailService>();
-        
         services.AddScoped<IAuditService, AuditService>();
-        services.AddScoped<ISettingsService, SettingsService>();
-        services.AddScoped<IPayrollEngine, PayrollEngine>();
-        services.AddScoped<IOrganizationProvisioningService, OrganizationProvisioningService>();
-        services.AddScoped<ITenantContext, HRMS.Infrastructure.Tenancy.TenantContext>();
-
-        // Performance & Resilience
         services.AddScoped<ICacheService, MemoryCacheService>();
         services.AddSingleton<IBackgroundJobService, BackgroundJobService>();
         services.AddHostedService(sp => (BackgroundJobService)sp.GetRequiredService<IBackgroundJobService>());

@@ -5,7 +5,6 @@ namespace HRMS.Persistence.Repositories;
 
 public class UnitOfWork(
     AppDbContext context,
-    IOrganizationRepository organizations,
     IUserRepository users,
     IEmployeeRepository employees,
     IDepartmentRepository departments,
@@ -19,16 +18,13 @@ public class UnitOfWork(
     INotificationRepository notifications,
     INotificationPreferencesRepository notificationPreferences,
     IAuditLogRepository auditLogs,
-    IOrganizationSettingRepository settings,
-    IDocumentRepository documents,
-    IPayrollRepository payroll) : IUnitOfWork
+    IDocumentRepository documents) : IUnitOfWork
 {
     public IApplicationDbContext DbContext => context;
-    public IOrganizationRepository Organizations => organizations;
     public IUserRepository Users => users;
     public IEmployeeRepository Employees => employees;
     public IDepartmentRepository Departments => departments;
-    
+
     public ILeaveTypeRepository LeaveTypes => leaveTypes;
     public ILeaveBalanceRepository LeaveBalances => leaveBalances;
     public ILeaveRequestRepository LeaveRequests => leaveRequests;
@@ -45,11 +41,7 @@ public class UnitOfWork(
 
     public IAuditLogRepository AuditLogs => auditLogs;
 
-    public IOrganizationSettingRepository Settings => settings;
-
     public IDocumentRepository Documents => documents;
-
-    public IPayrollRepository Payroll => payroll;
 
     public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
     {

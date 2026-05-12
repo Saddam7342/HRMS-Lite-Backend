@@ -3,11 +3,10 @@ namespace HRMS.Application.Common.Interfaces;
 public interface IUnitOfWork : IDisposable
 {
     IApplicationDbContext DbContext { get; }
-    IOrganizationRepository Organizations { get; }
     IUserRepository Users { get; }
     IEmployeeRepository Employees { get; }
     IDepartmentRepository Departments { get; }
-    
+
     ILeaveTypeRepository LeaveTypes { get; }
     ILeaveBalanceRepository LeaveBalances { get; }
     ILeaveRequestRepository LeaveRequests { get; }
@@ -24,11 +23,7 @@ public interface IUnitOfWork : IDisposable
 
     IAuditLogRepository AuditLogs { get; }
 
-    IOrganizationSettingRepository Settings { get; }
-
     IDocumentRepository Documents { get; }
 
-    IPayrollRepository Payroll { get; }
-    
     Task<int> CommitAsync(CancellationToken cancellationToken = default);
 }

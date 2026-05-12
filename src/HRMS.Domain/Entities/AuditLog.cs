@@ -3,7 +3,7 @@ using HRMS.Domain.Enums;
 
 namespace HRMS.Domain.Entities;
 
-public class AuditLog : TenantEntity
+public class AuditLog : AuditableEntity
 {
     public Guid? UserId { get; set; }
     public AppUser? User { get; set; }

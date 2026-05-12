@@ -40,10 +40,10 @@ public class DocumentsController : BaseApiController
         return Ok(ApiResponse<IReadOnlyList<DocumentDto>>.Ok(result.Data!));
     }
 
-    [HttpGet("organization")]
-    public async Task<IActionResult> GetOrganizationDocuments()
+    [HttpGet("company")]
+    public async Task<IActionResult> GetCompanyDocuments()
     {
-        var result = await Mediator.Send(new GetOrganizationDocumentsQuery());
+        var result = await Mediator.Send(new GetCompanyDocumentsQuery());
         return Ok(ApiResponse<IReadOnlyList<DocumentDto>>.Ok(result.Data!));
     }
 
