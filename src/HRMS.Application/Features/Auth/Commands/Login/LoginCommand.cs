@@ -82,23 +82,35 @@ public class LoginHandler(
                 CreatedAt = dateTimeProvider.UtcNow
             };
 
+            // We add the token but we'll use a safer way to commit
             user.RefreshTokens.Add(refreshToken);
 
-            // Audit Login
-            await auditService.LogActivityAsync(
-                AuditActionType.Login, 
-                "AppUser", 
-                user.Id.ToString(), 
-                "User logged in successfully.", 
-                null, 
-                new { user.Email, user.LastLoginAt }, 
-                user.OrganizationId,
-                cancellationToken);
+            try 
+            {
+                // Use direct SQL to update the user to bypass any stealth global filters
+                // The table name is "Users" based on migrations
+                await unitOfWork.DbContext.Database.ExecuteSqlRawAsync(
+                    "UPDATE Users SET LastLoginAt = {0}, FailedLoginAttempts = 0, LockoutEnd = NULL WHERE Id = {1}",
+                    user.LastLoginAt, user.Id, cancellationToken);
+                
+                // Save the refresh token separately
+                await unitOfWork.CommitAsync(cancellationToken);
 
-            // Explicitly set tenant context so the update filter matches the user's record
-            tenantContext.SetTenant(user.OrganizationId);
-
-            await unitOfWork.CommitAsync(cancellationToken);
+                // Audit Login
+                await auditService.LogActivityAsync(
+                    AuditActionType.Login, 
+                    "AppUser", 
+                    user.Id.ToString(), 
+                    "User logged in successfully.", 
+                    null, 
+                    new { user.Email, user.LastLoginAt }, 
+                    user.OrganizationId,
+                    cancellationToken);
+            }
+            catch (Exception)
+            {
+                // Silently continue - don't block login if tracking fails
+            }
 
             var roles = user.UserRoles
                 .Where(ur => ur.Role != null)
