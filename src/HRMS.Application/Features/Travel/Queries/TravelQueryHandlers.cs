@@ -11,6 +11,7 @@ public record GetPendingTravelApprovalsQuery : IRequest<Result<IReadOnlyList<Tra
 public record GetTeamTravelScheduleQuery(DateTime StartDate, DateTime EndDate) : IRequest<Result<IReadOnlyList<TeamTravelScheduleDto>>>;
 public record GetTravelHistoryQuery : IRequest<Result<IReadOnlyList<TravelRequestListDto>>>;
 public record GetTravelRequestByIdQuery(Guid Id) : IRequest<Result<TravelRequestDto>>;
+public record GetAllTravelRequestsQuery : IRequest<Result<IReadOnlyList<TravelRequestDto>>>;
 
 public class TravelQueryHandlers(
     IUnitOfWork unitOfWork,
@@ -20,7 +21,8 @@ public class TravelQueryHandlers(
       IRequestHandler<GetPendingTravelApprovalsQuery, Result<IReadOnlyList<TravelRequestDto>>>,
       IRequestHandler<GetTeamTravelScheduleQuery, Result<IReadOnlyList<TeamTravelScheduleDto>>>,
       IRequestHandler<GetTravelHistoryQuery, Result<IReadOnlyList<TravelRequestListDto>>>,
-      IRequestHandler<GetTravelRequestByIdQuery, Result<TravelRequestDto>>
+      IRequestHandler<GetTravelRequestByIdQuery, Result<TravelRequestDto>>,
+      IRequestHandler<GetAllTravelRequestsQuery, Result<IReadOnlyList<TravelRequestDto>>>
 {
     public async Task<Result<IReadOnlyList<TravelRequestDto>>> Handle(GetMyTravelRequestsQuery request, CancellationToken cancellationToken)
     {
@@ -64,6 +66,12 @@ public class TravelQueryHandlers(
         if (travel == null) return Result<TravelRequestDto>.Failure("Travel request not found.");
 
         return Result<TravelRequestDto>.Success(mapper.Map<TravelRequestDto>(travel));
+    }
+
+    public async Task<Result<IReadOnlyList<TravelRequestDto>>> Handle(GetAllTravelRequestsQuery request, CancellationToken cancellationToken)
+    {
+        var travels = await unitOfWork.TravelRequests.GetAllWithDetailsAsync(cancellationToken);
+        return Result<IReadOnlyList<TravelRequestDto>>.Success(mapper.Map<List<TravelRequestDto>>(travels));
     }
 
     private async Task<Domain.Entities.Employee?> GetCurrentEmployeeAsync(CancellationToken ct)

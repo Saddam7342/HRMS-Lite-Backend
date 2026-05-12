@@ -11,6 +11,7 @@ public record GetPendingExpenseApprovalsQuery : IRequest<Result<IReadOnlyList<Ex
 public record GetTeamExpenseClaimsQuery : IRequest<Result<IReadOnlyList<ExpenseClaimListDto>>>;
 public record GetExpenseCategoriesQuery : IRequest<Result<IReadOnlyList<ExpenseCategoryDto>>>;
 public record GetExpenseClaimByIdQuery(Guid Id) : IRequest<Result<ExpenseClaimDto>>;
+public record GetAllExpenseClaimsQuery : IRequest<Result<IReadOnlyList<ExpenseClaimDto>>>;
 
 public class ExpenseQueryHandlers(
     IUnitOfWork unitOfWork,
@@ -20,7 +21,8 @@ public class ExpenseQueryHandlers(
       IRequestHandler<GetPendingExpenseApprovalsQuery, Result<IReadOnlyList<ExpenseClaimDto>>>,
       IRequestHandler<GetTeamExpenseClaimsQuery, Result<IReadOnlyList<ExpenseClaimListDto>>>,
       IRequestHandler<GetExpenseCategoriesQuery, Result<IReadOnlyList<ExpenseCategoryDto>>>,
-      IRequestHandler<GetExpenseClaimByIdQuery, Result<ExpenseClaimDto>>
+      IRequestHandler<GetExpenseClaimByIdQuery, Result<ExpenseClaimDto>>,
+      IRequestHandler<GetAllExpenseClaimsQuery, Result<IReadOnlyList<ExpenseClaimDto>>>
 {
     public async Task<Result<IReadOnlyList<ExpenseClaimDto>>> Handle(GetMyExpenseClaimsQuery request, CancellationToken cancellationToken)
     {
@@ -61,6 +63,12 @@ public class ExpenseQueryHandlers(
         if (claim == null) return Result<ExpenseClaimDto>.Failure("Claim not found.");
 
         return Result<ExpenseClaimDto>.Success(mapper.Map<ExpenseClaimDto>(claim));
+    }
+
+    public async Task<Result<IReadOnlyList<ExpenseClaimDto>>> Handle(GetAllExpenseClaimsQuery request, CancellationToken cancellationToken)
+    {
+        var claims = await unitOfWork.ExpenseClaims.GetAllWithDetailsAsync(cancellationToken);
+        return Result<IReadOnlyList<ExpenseClaimDto>>.Success(mapper.Map<List<ExpenseClaimDto>>(claims));
     }
 
     private async Task<Domain.Entities.Employee?> GetCurrentEmployeeAsync(CancellationToken ct)

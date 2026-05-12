@@ -9,6 +9,7 @@ public interface IExpenseClaimRepository : IGenericRepository<ExpenseClaim>
     Task<IReadOnlyList<ExpenseClaim>> GetPendingByManagerAsync(Guid managerId, CancellationToken ct = default);
     Task<IReadOnlyList<ExpenseClaim>> GetTeamClaimsAsync(Guid managerId, CancellationToken ct = default);
     Task<ExpenseClaim?> GetWithDetailsAsync(Guid id, CancellationToken ct = default);
+    Task<IReadOnlyList<ExpenseClaim>> GetAllWithDetailsAsync(CancellationToken ct = default);
 }
 
 public interface IExpenseCategoryRepository : IGenericRepository<ExpenseCategory>

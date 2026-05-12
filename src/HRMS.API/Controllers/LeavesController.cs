@@ -14,6 +14,14 @@ namespace HRMS.API.Controllers;
 [ApiVersion("1.0")]
 public class LeavesController : BaseApiController
 {
+    [HttpGet]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetAll()
+    {
+        var result = await Mediator.Send(new GetAllLeaveRequestsQuery());
+        return result.IsSuccess ? OkData(result) : BadData(result);
+    }
+
     [HttpPost]
     [Authorize]
     public async Task<IActionResult> Create(CreateLeaveRequestCommand command)

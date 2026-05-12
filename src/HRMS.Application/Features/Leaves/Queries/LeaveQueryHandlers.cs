@@ -11,6 +11,7 @@ public record GetMyLeaveRequestsQuery : IRequest<Result<IReadOnlyList<LeaveReque
 public record GetPendingLeaveApprovalsQuery : IRequest<Result<IReadOnlyList<LeaveRequestDto>>>;
 public record GetTeamLeaveCalendarQuery(DateTime StartDate, DateTime EndDate) : IRequest<Result<IReadOnlyList<LeaveCalendarDto>>>;
 public record GetLeaveBalancesQuery(int? Year) : IRequest<Result<IReadOnlyList<LeaveBalanceDto>>>;
+public record GetAllLeaveRequestsQuery : IRequest<Result<IReadOnlyList<LeaveRequestDto>>>;
 
 public class LeaveQueryHandlers(
     IUnitOfWork unitOfWork,
@@ -20,7 +21,8 @@ public class LeaveQueryHandlers(
     : IRequestHandler<GetMyLeaveRequestsQuery, Result<IReadOnlyList<LeaveRequestDto>>>,
       IRequestHandler<GetPendingLeaveApprovalsQuery, Result<IReadOnlyList<LeaveRequestDto>>>,
       IRequestHandler<GetTeamLeaveCalendarQuery, Result<IReadOnlyList<LeaveCalendarDto>>>,
-      IRequestHandler<GetLeaveBalancesQuery, Result<IReadOnlyList<LeaveBalanceDto>>>
+      IRequestHandler<GetLeaveBalancesQuery, Result<IReadOnlyList<LeaveBalanceDto>>>,
+      IRequestHandler<GetAllLeaveRequestsQuery, Result<IReadOnlyList<LeaveRequestDto>>>
 {
     public async Task<Result<IReadOnlyList<LeaveRequestDto>>> Handle(GetMyLeaveRequestsQuery request, CancellationToken cancellationToken)
     {
@@ -58,6 +60,12 @@ public class LeaveQueryHandlers(
         var balances = await unitOfWork.LeaveBalances.GetByEmployeeAsync(employee.Id, year, cancellationToken);
         
         return Result<IReadOnlyList<LeaveBalanceDto>>.Success(mapper.Map<List<LeaveBalanceDto>>(balances));
+    }
+
+    public async Task<Result<IReadOnlyList<LeaveRequestDto>>> Handle(GetAllLeaveRequestsQuery request, CancellationToken cancellationToken)
+    {
+        var leaves = await unitOfWork.LeaveRequests.GetAllWithDetailsAsync(cancellationToken);
+        return Result<IReadOnlyList<LeaveRequestDto>>.Success(mapper.Map<List<LeaveRequestDto>>(leaves));
     }
 
     private async Task<Domain.Entities.Employee?> GetCurrentEmployeeAsync(CancellationToken ct)

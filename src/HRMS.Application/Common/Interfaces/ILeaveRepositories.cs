@@ -13,6 +13,7 @@ public interface ILeaveRequestRepository : IGenericRepository<LeaveRequest>
     Task<IReadOnlyList<LeaveRequest>> GetTeamLeaveAsync(Guid managerId, DateTime start, DateTime end, CancellationToken ct = default);
     Task<bool> HasOverlappingLeaveAsync(Guid employeeId, DateTime start, DateTime end, Guid? excludeId = null, CancellationToken ct = default);
     Task<LeaveRequest?> GetWithDetailsAsync(Guid id, CancellationToken ct = default);
+    Task<IReadOnlyList<LeaveRequest>> GetAllWithDetailsAsync(CancellationToken ct = default);
 }
 
 public interface ILeaveBalanceRepository : IGenericRepository<LeaveBalance>

@@ -255,6 +255,10 @@ export function getLeaveBalances(year?: number) {
   return request<unknown[]>(`/api/v1/Leaves/balances${q}`)
 }
 
+export function getAllLeaves() {
+  return request<LeaveRequestDto[]>('/api/v1/Leaves')
+}
+
 export function getPendingLeaves() {
   return request<LeaveRequestDto[]>('/api/v1/Leaves/pending-approvals')
 }
@@ -302,6 +306,10 @@ export function getTeamExpenseClaims() {
   return request<ExpenseClaimListDto[]>('/api/v1/ExpenseClaims/team')
 }
 
+export function getAllExpenses() {
+  return request<ExpenseClaimDto[]>('/api/v1/ExpenseClaims')
+}
+
 export function getExpenseCategories() {
   return request<unknown[]>('/api/v1/ExpenseClaims/categories')
 }
@@ -347,6 +355,10 @@ export function cancelTravel(id: string) {
 
 export function getPendingTravel() {
   return request<TravelRequestDto[]>('/api/v1/TravelRequests/pending-approvals')
+}
+
+export function getAllTravel() {
+  return request<TravelRequestDto[]>('/api/v1/TravelRequests')
 }
 
 export function getTeamTravelSchedule(start: string, end: string) {

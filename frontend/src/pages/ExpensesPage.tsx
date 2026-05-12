@@ -11,6 +11,8 @@ export default function ExpensesPage() {
 
   const [pending, setPending] = useState<ExpenseClaimDto[]>([])
   const [team, setTeam] = useState<ExpenseClaimListDto[]>([])
+  const [allExpenses, setAllExpenses] = useState<ExpenseClaimDto[]>([])
+  const [tab, setTab] = useState<'pending' | 'team' | 'org'>('pending')
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
@@ -28,13 +30,20 @@ export default function ExpensesPage() {
           if (r.success && r.data) setTeam(r.data)
         }),
       )
+      if (hasRole(roles, 'Admin')) {
+        jobs.push(
+          api.getAllExpenses().then((r) => {
+            if (r.success && r.data) setAllExpenses(r.data)
+          }),
+        )
+      }
     } else {
       setPending([])
       setTeam([])
     }
     await Promise.all(jobs)
     setLoading(false)
-  }, [approver])
+  }, [approver, roles])
 
   useEffect(() => {
     void load()
@@ -68,8 +77,25 @@ export default function ExpensesPage() {
       {!approver && <Alert type="info">Expense approvals are available to Admin and Manager roles.</Alert>}
 
       {approver && (
+        <div className="mb-6 flex gap-2">
+          <Btn variant={tab === 'pending' ? 'primary' : 'secondary'} onClick={() => setTab('pending')}>
+            Pending
+          </Btn>
+          <Btn variant={tab === 'team' ? 'primary' : 'secondary'} onClick={() => setTab('team')}>
+            Team
+          </Btn>
+          {hasRole(roles, 'Admin') && (
+            <Btn variant={tab === 'org' ? 'primary' : 'secondary'} onClick={() => setTab('org')}>
+              Organization
+            </Btn>
+          )}
+        </div>
+      )}
+
+      {approver && (
         <>
-          <Card className="mb-8">
+          {tab === 'pending' && (
+            <Card className="mb-8">
             <h3 className="mb-4 text-sm font-semibold text-slate-800">Pending approvals</h3>
             {loading ? (
               <Spinner />
@@ -113,11 +139,13 @@ export default function ExpensesPage() {
             )}
           </Card>
 
-          <Card>
-            <h3 className="mb-4 text-sm font-semibold text-slate-800">Team expense claims</h3>
-            {loading ? (
-              <Spinner />
-            ) : (
+            </div>
+          </Card>
+          )}
+
+          {tab === 'org' && hasRole(roles, 'Admin') && (
+            <Card>
+              <h3 className="mb-4 text-sm font-semibold text-slate-800">All organization expenses</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
@@ -131,9 +159,9 @@ export default function ExpensesPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {team.map((row) => (
+                    {allExpenses.map((row) => (
                       <tr key={row.id} className="border-b border-slate-100">
-                        <td className="py-3 font-medium">{row.employeeName}</td>
+                        <td className="py-3 font-medium text-slate-900">{row.employeeName}</td>
                         <td className="py-3">{row.title}</td>
                         <td className="py-3">{row.categoryName}</td>
                         <td className="py-3">{money(row.amount)}</td>
@@ -143,10 +171,9 @@ export default function ExpensesPage() {
                     ))}
                   </tbody>
                 </table>
-                {team.length === 0 && <p className="mt-4 text-sm text-slate-500">No team claims found.</p>}
               </div>
-            )}
-          </Card>
+            </Card>
+          )}
         </>
       )}
     </div>

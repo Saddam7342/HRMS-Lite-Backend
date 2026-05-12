@@ -51,4 +51,12 @@ public class TravelRequestRepository(AppDbContext context) : GenericRepository<T
             .Include(x => x.ApprovedBy)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
     }
+
+    public async Task<IReadOnlyList<TravelRequest>> GetAllWithDetailsAsync(CancellationToken ct = default)
+    {
+        return await _dbSet
+            .Include(x => x.Employee)
+            .OrderByDescending(x => x.FromDate)
+            .ToListAsync(ct);
+    }
 }

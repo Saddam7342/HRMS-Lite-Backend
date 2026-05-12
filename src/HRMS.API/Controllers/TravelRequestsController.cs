@@ -14,6 +14,14 @@ namespace HRMS.API.Controllers;
 [ApiVersion("1.0")]
 public class TravelRequestsController : BaseApiController
 {
+    [HttpGet]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetAll()
+    {
+        var result = await Mediator.Send(new GetAllTravelRequestsQuery());
+        return result.IsSuccess ? OkData(result) : BadData(result);
+    }
+
     [HttpPost]
     [Authorize]
     public async Task<IActionResult> Create(CreateTravelRequestCommand command)

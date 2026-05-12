@@ -99,4 +99,13 @@ public class LeaveRequestRepository(AppDbContext context) : GenericRepository<Le
             .Include(x => x.ApprovedBy)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
     }
+
+    public async Task<IReadOnlyList<LeaveRequest>> GetAllWithDetailsAsync(CancellationToken ct = default)
+    {
+        return await _dbSet
+            .Include(x => x.Employee)
+            .Include(x => x.LeaveType)
+            .OrderByDescending(x => x.StartDate)
+            .ToListAsync(ct);
+    }
 }

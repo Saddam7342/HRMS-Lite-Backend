@@ -38,6 +38,17 @@ builder.Services.AddControllers()
     {
         o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
+});
+
 builder.Services.AddEndpointsApiExplorer();
 
 // --- Swagger ---
@@ -180,6 +191,8 @@ using (var scope = app.Services.CreateScope())
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<RateLimitingMiddleware>();
+
+app.UseCors("AllowAll");
 
 var showSwagger = builder.Configuration.GetValue<bool>("ShowSwagger", defaultValue: false);
 if (app.Environment.IsDevelopment() || showSwagger)

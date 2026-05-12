@@ -11,4 +11,5 @@ public interface ITravelRequestRepository : IGenericRepository<TravelRequest>
     Task<IReadOnlyList<TravelRequest>> GetTeamScheduleAsync(Guid managerId, DateTime start, DateTime end, CancellationToken ct = default);
     Task<bool> HasOverlappingTravelAsync(Guid employeeId, DateTime start, DateTime end, Guid? excludeId = null, CancellationToken ct = default);
     Task<TravelRequest?> GetWithDetailsAsync(Guid id, CancellationToken ct = default);
+    Task<IReadOnlyList<TravelRequest>> GetAllWithDetailsAsync(CancellationToken ct = default);
 }

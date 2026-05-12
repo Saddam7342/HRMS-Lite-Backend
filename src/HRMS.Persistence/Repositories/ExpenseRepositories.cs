@@ -57,4 +57,13 @@ public class ExpenseClaimRepository(AppDbContext context) : GenericRepository<Ex
             .Include(x => x.ApprovedBy)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
     }
+
+    public async Task<IReadOnlyList<ExpenseClaim>> GetAllWithDetailsAsync(CancellationToken ct = default)
+    {
+        return await _dbSet
+            .Include(x => x.Employee)
+            .Include(x => x.Category)
+            .OrderByDescending(x => x.ExpenseDate)
+            .ToListAsync(ct);
+    }
 }

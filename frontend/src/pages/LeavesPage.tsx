@@ -11,6 +11,8 @@ export default function LeavesPage() {
 
   const [pending, setPending] = useState<LeaveRequestDto[]>([])
   const [calendar, setCalendar] = useState<LeaveCalendarDto[]>([])
+  const [allLeaves, setAllLeaves] = useState<LeaveRequestDto[]>([])
+  const [tab, setTab] = useState<'pending' | 'calendar' | 'org'>('pending')
   const [calStart, setCalStart] = useState(todayISODate())
   const [calEnd, setCalEnd] = useState(todayISODate())
   const [loading, setLoading] = useState(true)
@@ -28,9 +30,14 @@ export default function LeavesPage() {
     if (approver) {
       const c = await api.getTeamLeaveCalendar(`${calStart}T00:00:00Z`, `${calEnd}T23:59:59Z`)
       if (c.success && c.data) setCalendar(c.data)
+      
+      if (hasRole(roles, 'Admin')) {
+        const a = await api.getAllLeaves()
+        if (a.success && a.data) setAllLeaves(a.data)
+      }
     } else setCalendar([])
     setLoading(false)
-  }, [approver, loadPending, calStart, calEnd])
+  }, [approver, roles, loadPending, calStart, calEnd])
 
   useEffect(() => {
     void load()
@@ -71,10 +78,27 @@ export default function LeavesPage() {
       {!approver && (
         <Alert type="info">Leave approvals are available to Admin and Manager roles.</Alert>
       )}
+      
+      {approver && (
+        <div className="mb-6 flex gap-2">
+          <Btn variant={tab === 'pending' ? 'primary' : 'secondary'} onClick={() => setTab('pending')}>
+            Pending
+          </Btn>
+          <Btn variant={tab === 'calendar' ? 'primary' : 'secondary'} onClick={() => setTab('calendar')}>
+            Calendar
+          </Btn>
+          {hasRole(roles, 'Admin') && (
+            <Btn variant={tab === 'org' ? 'primary' : 'secondary'} onClick={() => setTab('org')}>
+              Organization
+            </Btn>
+          )}
+        </div>
+      )}
 
       {approver && (
         <>
-          <Card className="mb-8">
+          {tab === 'pending' && (
+            <Card className="mb-8">
             <h3 className="mb-4 text-sm font-semibold text-slate-800">Pending approvals</h3>
             {loading ? (
               <Spinner />
@@ -120,41 +144,39 @@ export default function LeavesPage() {
             )}
           </Card>
 
-          <Card>
-            <h3 className="mb-4 text-sm font-semibold text-slate-800">Team leave calendar</h3>
-            <div className="mb-4 flex flex-wrap items-end gap-4">
-              <Input type="date" label="From" value={calStart} onChange={(e) => setCalStart(e.target.value)} />
-              <Input type="date" label="To" value={calEnd} onChange={(e) => setCalEnd(e.target.value)} />
-              <Btn onClick={() => void reloadCalendar()}>Load</Btn>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 text-slate-500">
-                    <th className="pb-3 font-medium">Employee</th>
-                    <th className="pb-3 font-medium">Type</th>
-                    <th className="pb-3 font-medium">Start</th>
-                    <th className="pb-3 font-medium">End</th>
-                    <th className="pb-3 font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {calendar.map((row) => (
-                    <tr key={row.id} className="border-b border-slate-100">
-                      <td className="py-3 font-medium">{row.employeeName}</td>
-                      <td className="py-3">{row.leaveTypeName}</td>
-                      <td className="py-3">{formatDate(row.startDate)}</td>
-                      <td className="py-3">{formatDate(row.endDate)}</td>
-                      <td className="py-3">{row.status}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {calendar.length === 0 && !loading && (
-                <p className="mt-4 text-sm text-slate-500">No entries in this range.</p>
-              )}
             </div>
           </Card>
+          )}
+
+          {tab === 'org' && hasRole(roles, 'Admin') && (
+            <Card>
+              <h3 className="mb-4 text-sm font-semibold text-slate-800">All organization leaves</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-slate-500">
+                      <th className="pb-3 font-medium">Employee</th>
+                      <th className="pb-3 font-medium">Type</th>
+                      <th className="pb-3 font-medium">Start</th>
+                      <th className="pb-3 font-medium">End</th>
+                      <th className="pb-3 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allLeaves.map((row) => (
+                      <tr key={row.id} className="border-b border-slate-100">
+                        <td className="py-3 font-medium text-slate-900">{row.employeeName}</td>
+                        <td className="py-3">{row.leaveTypeName}</td>
+                        <td className="py-3">{formatDate(row.startDate)}</td>
+                        <td className="py-3">{formatDate(row.endDate)}</td>
+                        <td className="py-3">{row.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
         </>
       )}
     </div>
