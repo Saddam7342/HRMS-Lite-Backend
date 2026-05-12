@@ -15,7 +15,7 @@ public class DepartmentsController : BaseApiController
     /// Creates a new department within the organization.
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<Guid>), 200)]
     public async Task<IActionResult> Create(CreateDepartmentCommand command)
     {
@@ -27,7 +27,7 @@ public class DepartmentsController : BaseApiController
     /// Gets all departments in the organization.
     /// </summary>
     [HttpGet]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin,Manager")]
+    [Authorize(Roles = "Admin,Manager")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<DepartmentListDto>>), 200)]
     public async Task<IActionResult> GetAll()
     {
@@ -39,7 +39,7 @@ public class DepartmentsController : BaseApiController
     /// Gets a full hierarchical tree of the organization's departments.
     /// </summary>
     [HttpGet("hierarchy")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin,Manager")]
+    [Authorize(Roles = "Admin,Manager")]
     [ProducesResponseType(typeof(ApiResponse<List<DepartmentHierarchyDto>>), 200)]
     public async Task<IActionResult> GetHierarchy()
     {
@@ -63,7 +63,7 @@ public class DepartmentsController : BaseApiController
     /// Updates a department's details. Prevents circular references.
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, UpdateDepartmentCommand command)
     {
         if (id != command.Id) return BadRequest(ApiResponse.Fail("ID mismatch."));
@@ -75,7 +75,7 @@ public class DepartmentsController : BaseApiController
     /// Deletes a department if no employees are assigned to it.
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await Mediator.Send(new DeleteDepartmentCommand(id));
@@ -86,7 +86,7 @@ public class DepartmentsController : BaseApiController
     /// Activates a department.
     /// </summary>
     [HttpPut("{id}/activate")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Activate(Guid id)
     {
         var result = await Mediator.Send(new ActivateDepartmentCommand(id));
@@ -97,7 +97,7 @@ public class DepartmentsController : BaseApiController
     /// Deactivates a department.
     /// </summary>
     [HttpPut("{id}/deactivate")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Deactivate(Guid id)
     {
         var result = await Mediator.Send(new DeactivateDepartmentCommand(id));

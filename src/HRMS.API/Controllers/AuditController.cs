@@ -9,7 +9,7 @@ namespace HRMS.API.Controllers;
 public class AuditController : BaseApiController
 {
     [HttpGet("entity/{entityName}/{entityId}")]
-    [Authorize(Roles = "OrganizationAdmin,Manager")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> GetEntityHistory(string entityName, string entityId)
     {
         var result = await Mediator.Send(new GetEntityAuditHistoryQuery(entityName, entityId));
@@ -25,7 +25,7 @@ public class AuditController : BaseApiController
     }
 
     [HttpGet("logs")]
-    [Authorize(Roles = "OrganizationAdmin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetSystemLogs([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
         var result = await Mediator.Send(new GetSystemAuditLogsQuery(page, pageSize));
@@ -33,7 +33,7 @@ public class AuditController : BaseApiController
     }
 
     [HttpGet("{id}")]
-    [Authorize(Roles = "OrganizationAdmin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var result = await Mediator.Send(new GetAuditLogByIdQuery(id));

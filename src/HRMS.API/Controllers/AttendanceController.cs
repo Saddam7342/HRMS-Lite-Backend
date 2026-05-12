@@ -44,7 +44,7 @@ public class AttendanceController : BaseApiController
     }
 
     [HttpGet("range")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetRange(DateTime start, DateTime end)
     {
         var result = await Mediator.Send(new GetAttendanceByDateRangeQuery(start, end));
@@ -52,7 +52,7 @@ public class AttendanceController : BaseApiController
     }
 
     [HttpGet("team")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin,Manager")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> GetTeam(DateTime date)
     {
         var result = await Mediator.Send(new GetTeamAttendanceQuery(date));
@@ -60,7 +60,7 @@ public class AttendanceController : BaseApiController
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, UpdateAttendanceCommand command)
     {
         if (id != command.Id) return BadRequest(ApiResponse.Fail("ID mismatch."));
@@ -69,7 +69,7 @@ public class AttendanceController : BaseApiController
     }
 
     [HttpPut("{id}/mark-absent")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> MarkAbsent(Guid id, [FromQuery] DateTime date)
     {
         var result = await Mediator.Send(new MarkAttendanceAbsentCommand(id, date));

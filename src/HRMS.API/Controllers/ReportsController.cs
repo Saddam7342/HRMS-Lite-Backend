@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.API.Controllers;
 
-[Authorize(Roles = "OrganizationAdmin,Manager")]
+[Authorize(Roles = "Admin,Manager")]
 public class ReportsController : BaseApiController
 {
     [HttpGet("hr-dashboard")]

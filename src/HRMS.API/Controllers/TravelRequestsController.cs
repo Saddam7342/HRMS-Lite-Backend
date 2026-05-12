@@ -61,7 +61,7 @@ public class TravelRequestsController : BaseApiController
     }
 
     [HttpGet("pending-approvals")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin,Manager")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> GetPendingApprovals()
     {
         var result = await Mediator.Send(new GetPendingTravelApprovalsQuery());
@@ -69,7 +69,7 @@ public class TravelRequestsController : BaseApiController
     }
 
     [HttpPut("{id}/approve")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin,Manager")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> Approve(Guid id)
     {
         var result = await Mediator.Send(new ApproveTravelRequestCommand(id));
@@ -77,7 +77,7 @@ public class TravelRequestsController : BaseApiController
     }
 
     [HttpPut("{id}/reject")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin,Manager")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> Reject(Guid id, [FromBody] string? reason)
     {
         var result = await Mediator.Send(new RejectTravelRequestCommand(id, reason));
@@ -85,7 +85,7 @@ public class TravelRequestsController : BaseApiController
     }
 
     [HttpGet("team-schedule")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin,Manager")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> GetTeamSchedule(DateTime start, DateTime end)
     {
         var result = await Mediator.Send(new GetTeamTravelScheduleQuery(start, end));

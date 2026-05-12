@@ -36,7 +36,7 @@ public class ExpenseClaimsController : BaseApiController
     }
 
     [HttpGet("pending-approvals")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin,Manager")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> GetPendingApprovals()
     {
         var result = await Mediator.Send(new GetPendingExpenseApprovalsQuery());
@@ -44,7 +44,7 @@ public class ExpenseClaimsController : BaseApiController
     }
 
     [HttpGet("team")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin,Manager")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> GetTeamClaims()
     {
         var result = await Mediator.Send(new GetTeamExpenseClaimsQuery());
@@ -52,7 +52,7 @@ public class ExpenseClaimsController : BaseApiController
     }
 
     [HttpPut("{id}/approve")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin,Manager")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> Approve(Guid id)
     {
         var result = await Mediator.Send(new ApproveExpenseClaimCommand(id));
@@ -60,7 +60,7 @@ public class ExpenseClaimsController : BaseApiController
     }
 
     [HttpPut("{id}/reject")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin,Manager")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> Reject(Guid id, [FromBody] string? reason)
     {
         var result = await Mediator.Send(new RejectExpenseClaimCommand(id, reason));

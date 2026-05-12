@@ -36,7 +36,7 @@ public class LeavesController : BaseApiController
     }
 
     [HttpGet("pending-approvals")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin,Manager")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> GetPendingApprovals()
     {
         var result = await Mediator.Send(new GetPendingLeaveApprovalsQuery());
@@ -44,7 +44,7 @@ public class LeavesController : BaseApiController
     }
 
     [HttpPut("{id}/approve")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin,Manager")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> Approve(Guid id)
     {
         var result = await Mediator.Send(new ApproveLeaveRequestCommand(id));
@@ -52,7 +52,7 @@ public class LeavesController : BaseApiController
     }
 
     [HttpPut("{id}/reject")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin,Manager")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> Reject(Guid id, [FromBody] string? reason)
     {
         var result = await Mediator.Send(new RejectLeaveRequestCommand(id, reason));
@@ -68,7 +68,7 @@ public class LeavesController : BaseApiController
     }
 
     [HttpGet("team-calendar")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin,Manager")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> GetTeamCalendar(DateTime start, DateTime end)
     {
         var result = await Mediator.Send(new GetTeamLeaveCalendarQuery(start, end));

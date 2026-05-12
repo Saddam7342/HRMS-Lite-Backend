@@ -16,7 +16,7 @@ public class EmployeesController : BaseApiController
     /// Onboards a new employee. Creates AppUser and Employee profile.
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<Guid>), 200)]
     public async Task<IActionResult> Create(CreateEmployeeCommand command)
     {
@@ -28,7 +28,7 @@ public class EmployeesController : BaseApiController
     /// Gets a paged list of all employees in the organization.
     /// </summary>
     [HttpGet]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin,Manager")]
+    [Authorize(Roles = "Admin,Manager")]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<EmployeeListDto>>), 200)]
     public async Task<IActionResult> GetAll([FromQuery] PaginationParams paginationParams)
     {
@@ -52,7 +52,7 @@ public class EmployeesController : BaseApiController
     /// Gets a specific employee's profile by ID.
     /// </summary>
     [HttpGet("{id}")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin,Manager")]
+    [Authorize(Roles = "Admin,Manager")]
     [ProducesResponseType(typeof(ApiResponse<EmployeeProfileDto>), 200)]
     public async Task<IActionResult> GetById(Guid id)
     {
@@ -76,7 +76,7 @@ public class EmployeesController : BaseApiController
     /// Activates an employee's account and profile.
     /// </summary>
     [HttpPut("{id}/activate")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Activate(Guid id)
     {
         var result = await Mediator.Send(new ActivateEmployeeCommand(id));
@@ -87,7 +87,7 @@ public class EmployeesController : BaseApiController
     /// Deactivates an employee's account and profile.
     /// </summary>
     [HttpPut("{id}/deactivate")]
-    [Authorize(Roles = "PlatformAdmin,OrganizationAdmin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Deactivate(Guid id)
     {
         var result = await Mediator.Send(new DeactivateEmployeeCommand(id));
@@ -98,7 +98,7 @@ public class EmployeesController : BaseApiController
     /// Gets the list of employees reporting to a specific manager.
     /// </summary>
     [HttpGet("my-team")]
-    [Authorize(Roles = "Manager,OrganizationAdmin")]
+    [Authorize(Roles = "Manager,Admin")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<TeamMemberDto>>), 200)]
     public async Task<IActionResult> GetMyTeam()
     {
