@@ -30,11 +30,14 @@ public class JwtTokenService(IOptions<JwtSettings> jwtSettings) : IJwtTokenServi
         // Add Roles
         foreach (var userRole in user.UserRoles)
         {
+            if (userRole.Role == null) continue;
+            
             claims.Add(new Claim(ClaimTypes.Role, userRole.Role.Name));
             
             // Add Permissions
             foreach (var rolePermission in userRole.Role.RolePermissions)
             {
+                if (rolePermission.Permission == null) continue;
                 claims.Add(new Claim(AppClaimTypes.Permission, rolePermission.Permission.Code));
             }
         }

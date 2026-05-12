@@ -26,83 +26,99 @@ public class LoginHandler(
     IDateTimeProvider dateTimeProvider,
     IAuditService auditService) : IRequestHandler<LoginCommand, Result<LoginResponse>>
 {
-    public async Task<Result<LoginResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
-    {
-        var user = await unitOfWork.Users.GetWithRolesAndPermissionsAsync(request.EmailOrUsername, cancellationToken);
-
-        if (user == null)
-            return Result<LoginResponse>.Failure("Invalid credentials.");
-
-        // Resolve OrganizationId from Slug if provided
-        if (!string.IsNullOrEmpty(request.Slug))
+        try 
         {
-            var org = await unitOfWork.Organizations.GetBySlugAsync(request.Slug, cancellationToken);
-            if (org == null || user.OrganizationId != org.Id)
+            var user = await unitOfWork.Users.GetWithRolesAndPermissionsAsync(request.EmailOrUsername, cancellationToken);
+
+            if (user == null)
                 return Result<LoginResponse>.Failure("Invalid credentials.");
-        }
-        // If OrganizationId is explicitly provided, ensure it matches
-        else if (request.OrganizationId.HasValue && request.OrganizationId.Value != user.OrganizationId)
-        {
-            return Result<LoginResponse>.Failure("Invalid credentials.");
-        }
 
-        if (!user.IsActive)
-            return Result<LoginResponse>.Failure("Account is deactivated.");
-
-        if (user.LockoutEnd > dateTimeProvider.UtcNow)
-            return Result<LoginResponse>.Failure("Account is locked due to multiple failed attempts.");
-
-        if (!passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
-        {
-            user.FailedLoginAttempts++;
-            if (user.FailedLoginAttempts >= 5)
+            // Resolve OrganizationId from Slug if provided
+            if (!string.IsNullOrEmpty(request.Slug))
             {
-                user.LockoutEnd = dateTimeProvider.UtcNow.AddMinutes(30);
-                user.FailedLoginAttempts = 0;
+                var org = await unitOfWork.Organizations.GetBySlugAsync(request.Slug, cancellationToken);
+                if (org == null || user.OrganizationId != org.Id)
+                    return Result<LoginResponse>.Failure("Invalid credentials.");
             }
+            else if (request.OrganizationId.HasValue && request.OrganizationId.Value != user.OrganizationId)
+            {
+                return Result<LoginResponse>.Failure("Invalid credentials.");
+            }
+
+            if (!user.IsActive)
+                return Result<LoginResponse>.Failure("Account is deactivated.");
+
+            if (user.LockoutEnd > dateTimeProvider.UtcNow)
+                return Result<LoginResponse>.Failure("Account is locked due to multiple failed attempts.");
+
+            if (!passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
+            {
+                user.FailedLoginAttempts++;
+                if (user.FailedLoginAttempts >= 5)
+                {
+                    user.LockoutEnd = dateTimeProvider.UtcNow.AddMinutes(30);
+                    user.FailedLoginAttempts = 0;
+                }
+                await unitOfWork.CommitAsync(cancellationToken);
+                return Result<LoginResponse>.Failure("Invalid credentials.");
+            }
+
+            // Reset tracking on successful login
+            user.FailedLoginAttempts = 0;
+            user.LockoutEnd = null;
+            user.LastLoginAt = dateTimeProvider.UtcNow;
+
+            var accessToken = jwtTokenService.GenerateAccessToken(user);
+            var refreshTokenStr = jwtTokenService.GenerateRefreshToken();
+
+            var refreshToken = new RefreshToken
+            {
+                UserId = user.Id,
+                Token = refreshTokenStr,
+                ExpiresAt = dateTimeProvider.UtcNow.AddDays(7),
+                CreatedAt = dateTimeProvider.UtcNow
+            };
+
+            user.RefreshTokens.Add(refreshToken);
             await unitOfWork.CommitAsync(cancellationToken);
-            return Result<LoginResponse>.Failure("Invalid credentials.");
+
+            // Audit Login
+            await auditService.LogActivityAsync(
+                AuditActionType.Login, 
+                "AppUser", 
+                user.Id.ToString(), 
+                "User logged in successfully.", 
+                null, 
+                new { user.Email, user.LastLoginAt }, 
+                user.OrganizationId,
+                cancellationToken);
+
+            var roles = user.UserRoles
+                .Where(ur => ur.Role != null)
+                .Select(r => r.Role.Name)
+                .ToList();
+
+            var permissions = user.UserRoles
+                .Where(ur => ur.Role != null)
+                .SelectMany(r => r.Role.RolePermissions)
+                .Where(rp => rp.Permission != null)
+                .Select(p => p.Permission.Code)
+                .Distinct()
+                .ToList();
+
+            var response = new LoginResponse(
+                user.Id,
+                user.Email,
+                $"{user.FirstName} {user.LastName}",
+                new TokenDto(accessToken, refreshTokenStr, refreshToken.ExpiresAt),
+                roles,
+                permissions
+            );
+
+            return Result<LoginResponse>.Success(response);
         }
-
-        // Reset tracking on successful login
-        user.FailedLoginAttempts = 0;
-        user.LockoutEnd = null;
-        user.LastLoginAt = dateTimeProvider.UtcNow;
-
-        var accessToken = jwtTokenService.GenerateAccessToken(user);
-        var refreshTokenStr = jwtTokenService.GenerateRefreshToken();
-
-        var refreshToken = new RefreshToken
+        catch (Exception ex)
         {
-            UserId = user.Id,
-            Token = refreshTokenStr,
-            ExpiresAt = dateTimeProvider.UtcNow.AddDays(7),
-            CreatedAt = dateTimeProvider.UtcNow
-        };
-
-        user.RefreshTokens.Add(refreshToken);
-        await unitOfWork.CommitAsync(cancellationToken);
-
-        // Audit Login
-        await auditService.LogActivityAsync(
-            AuditActionType.Login, 
-            "AppUser", 
-            user.Id.ToString(), 
-            "User logged in successfully.", 
-            null, 
-            new { user.Email, user.LastLoginAt }, 
-            user.OrganizationId,
-            cancellationToken);
-
-        var response = new LoginResponse(
-            user.Id,
-            user.Email,
-            $"{user.FirstName} {user.LastName}",
-            new TokenDto(accessToken, refreshTokenStr, refreshToken.ExpiresAt),
-            user.UserRoles.Select(r => r.Role.Name).ToList(),
-            user.UserRoles.SelectMany(r => r.Role.RolePermissions).Select(p => p.Permission.Code).Distinct().ToList()
-        );
-
-        return Result<LoginResponse>.Success(response);
-    }
+            return Result<LoginResponse>.Failure($"Internal Login Error: {ex.Message}");
+        }
 }
