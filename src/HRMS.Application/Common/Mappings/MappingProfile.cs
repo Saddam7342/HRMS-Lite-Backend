@@ -33,7 +33,6 @@ public class MappingProfile : Profile
         CreateMap<Employee, TeamMemberDto>()
             .ForMember(d => d.FullName, opt => opt.MapFrom(s => $"{s.FirstName} {s.LastName}"));
 
-        // Department
         CreateMap<Department, DepartmentDto>()
             .ForMember(d => d.ParentDepartmentName, opt => opt.MapFrom(s => s.ParentDepartment != null ? s.ParentDepartment.Name : null))
             .ForMember(d => d.DepartmentHeadName, opt => opt.MapFrom(s => s.DepartmentHead != null ? $"{s.DepartmentHead.FirstName} {s.DepartmentHead.LastName}" : null));
@@ -41,7 +40,7 @@ public class MappingProfile : Profile
         CreateMap<Department, DepartmentListDto>()
             .ForMember(d => d.ParentDepartmentName, opt => opt.MapFrom(s => s.ParentDepartment != null ? s.ParentDepartment.Name : null))
             .ForMember(d => d.DepartmentHeadName, opt => opt.MapFrom(s => s.DepartmentHead != null ? $"{s.DepartmentHead.FirstName} {s.DepartmentHead.LastName}" : null))
-            .ForMember(d => d.EmployeeCount, opt => opt.MapFrom(s => s.Employees.Count));
+            .ForMember(d => d.EmployeeCount, opt => opt.MapFrom(s => s.Employees != null ? s.Employees.Count : 0));
 
         // Leave
         CreateMap<LeaveRequest, LeaveRequestDto>()

@@ -23,13 +23,22 @@ public class DepartmentQueryHandlers(
 {
     public async Task<Result<IReadOnlyList<DepartmentListDto>>> Handle(GetDepartmentsQuery request, CancellationToken cancellationToken)
     {
-        var departments = await unitOfWork.Departments.GetQueryable()
-            .Include(x => x.ParentDepartment)
-            .Include(x => x.DepartmentHead)
-            .Include(x => x.Employees)
-            .ToListAsync(cancellationToken);
+        try 
+        {
+            var departments = await unitOfWork.Departments.GetQueryable()
+                .AsNoTracking()
+                .Include(x => x.ParentDepartment)
+                .Include(x => x.DepartmentHead)
+                .Include(x => x.Employees)
+                .ToListAsync(cancellationToken);
 
-        return Result<IReadOnlyList<DepartmentListDto>>.Success(mapper.Map<IReadOnlyList<DepartmentListDto>>(departments));
+            var dtos = mapper.Map<IReadOnlyList<DepartmentListDto>>(departments);
+            return Result<IReadOnlyList<DepartmentListDto>>.Success(dtos);
+        }
+        catch (Exception ex)
+        {
+            return Result<IReadOnlyList<DepartmentListDto>>.Failure($"Failed to retrieve departments: {ex.Message}");
+        }
     }
 
     public async Task<Result<DepartmentDto>> Handle(GetDepartmentByIdQuery request, CancellationToken cancellationToken)
