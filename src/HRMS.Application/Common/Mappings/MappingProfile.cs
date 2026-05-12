@@ -1,4 +1,3 @@
-using System.Text.Json;
 using AutoMapper;
 using HRMS.Application.Features.Attendance.DTOs;
 using HRMS.Application.Features.Audit.DTOs;
@@ -17,7 +16,7 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        // Employee
+        // Department
         CreateMap<Department, DepartmentDto>()
             .ConstructUsing(s => new DepartmentDto(
                 s.Id,
@@ -30,6 +29,17 @@ public class MappingProfile : Profile
                 s.DepartmentHead != null ? $"{s.DepartmentHead.FirstName} {s.DepartmentHead.LastName}" : null,
                 s.IsActive));
 
+        CreateMap<Department, DepartmentListDto>()
+            .ConstructUsing(s => new DepartmentListDto(
+                s.Id,
+                s.Name,
+                s.Code,
+                s.ParentDepartment != null ? s.ParentDepartment.Name : null,
+                s.DepartmentHead != null ? $"{s.DepartmentHead.FirstName} {s.DepartmentHead.LastName}" : null,
+                s.IsActive,
+                s.Employees != null ? s.Employees.Count : 0));
+
+        // Employee
         CreateMap<Employee, EmployeeDto>()
             .ConstructUsing(s => new EmployeeDto(
                 s.Id,
@@ -43,6 +53,16 @@ public class MappingProfile : Profile
                 s.Manager != null ? $"{s.Manager.FirstName} {s.Manager.LastName}" : null,
                 s.Status,
                 s.IsActive,
+                s.ProfileImageUrl));
+
+        CreateMap<Employee, EmployeeListDto>()
+            .ConstructUsing(s => new EmployeeListDto(
+                s.Id,
+                s.EmployeeCode,
+                $"{s.FirstName} {s.LastName}",
+                s.Designation,
+                s.Department != null ? s.Department.Name : null,
+                s.Status,
                 s.ProfileImageUrl));
 
         CreateMap<Employee, EmployeeProfileDto>()
@@ -75,16 +95,6 @@ public class MappingProfile : Profile
                 s.ProfileImageUrl,
                 s.Status));
 
-        CreateMap<Department, DepartmentListDto>()
-            .ConstructUsing(s => new DepartmentListDto(
-                s.Id,
-                s.Name,
-                s.Code,
-                s.ParentDepartment != null ? s.ParentDepartment.Name : null,
-                s.DepartmentHead != null ? $"{s.DepartmentHead.FirstName} {s.DepartmentHead.LastName}" : null,
-                s.IsActive,
-                s.Employees != null ? s.Employees.Count : 0));
-
         // Leave
         CreateMap<LeaveRequest, LeaveRequestDto>()
             .ConstructUsing(s => new LeaveRequestDto(
@@ -98,22 +108,18 @@ public class MappingProfile : Profile
                 s.TotalDays,
                 s.Reason,
                 s.Status,
-                s.SubmittedAt,
-                s.ApprovedById,
                 s.ApprovedBy != null ? $"{s.ApprovedBy.FirstName} {s.ApprovedBy.LastName}" : null,
-                s.ApprovalDate,
+                s.ApprovedAt,
                 s.RejectionReason));
 
         CreateMap<LeaveBalance, LeaveBalanceDto>()
             .ConstructUsing(s => new LeaveBalanceDto(
-                s.Id,
                 s.LeaveTypeId,
                 s.LeaveType.Name,
-                s.Year,
-                s.TotalEntitlement,
+                s.TotalDays,
                 s.UsedDays,
-                s.PendingDays,
-                s.RemainingDays));
+                s.RemainingDays,
+                s.Year));
 
         CreateMap<LeaveRequest, LeaveCalendarDto>()
             .ConstructUsing(s => new LeaveCalendarDto(
@@ -133,34 +139,28 @@ public class MappingProfile : Profile
                 s.Id,
                 s.EmployeeId,
                 $"{s.Employee.FirstName} {s.Employee.LastName}",
-                s.Title,
-                s.Description,
                 s.CategoryId,
                 s.Category.Name,
+                s.Title,
+                s.Description,
                 s.Amount,
-                s.Currency,
                 s.ExpenseDate,
-                s.ReceiptUrl,
                 s.Status,
+                s.ReceiptFileUrl,
                 s.SubmittedAt,
-                s.ApprovedById,
                 s.ApprovedBy != null ? $"{s.ApprovedBy.FirstName} {s.ApprovedBy.LastName}" : null,
-                s.ApprovalDate,
+                s.ApprovedAt,
                 s.RejectionReason));
 
         CreateMap<ExpenseClaim, ExpenseClaimListDto>()
             .ConstructUsing(s => new ExpenseClaimListDto(
                 s.Id,
-                s.EmployeeId,
                 $"{s.Employee.FirstName} {s.Employee.LastName}",
-                s.Title,
-                s.CategoryId,
                 s.Category.Name,
+                s.Title,
                 s.Amount,
-                s.Currency,
                 s.ExpenseDate,
-                s.Status,
-                s.SubmittedAt));
+                s.Status));
 
         // Travel
         CreateMap<TravelRequest, TravelRequestDto>()
@@ -169,29 +169,23 @@ public class MappingProfile : Profile
                 s.EmployeeId,
                 $"{s.Employee.FirstName} {s.Employee.LastName}",
                 s.Destination,
+                s.Purpose,
                 s.FromDate,
                 s.ToDate,
-                s.Purpose,
-                s.EstimatedBudget,
-                s.TravelType,
                 s.Status,
-                s.SubmittedAt,
-                s.ApprovedById,
+                s.EstimatedBudget,
                 s.ApprovedBy != null ? $"{s.ApprovedBy.FirstName} {s.ApprovedBy.LastName}" : null,
-                s.ApprovalDate,
+                s.ApprovedAt,
                 s.RejectionReason));
 
         CreateMap<TravelRequest, TravelRequestListDto>()
             .ConstructUsing(s => new TravelRequestListDto(
                 s.Id,
-                s.EmployeeId,
                 $"{s.Employee.FirstName} {s.Employee.LastName}",
                 s.Destination,
                 s.FromDate,
                 s.ToDate,
-                s.TravelType,
-                s.Status,
-                s.SubmittedAt));
+                s.Status));
 
         CreateMap<TravelRequest, TeamTravelScheduleDto>()
             .ConstructUsing(s => new TeamTravelScheduleDto(
@@ -210,23 +204,20 @@ public class MappingProfile : Profile
                 s.EmployeeId,
                 $"{s.Employee.FirstName} {s.Employee.LastName}",
                 s.Date,
-                s.CheckIn,
-                s.CheckOut,
-                s.WorkHours,
+                s.CheckInTime,
+                s.CheckOutTime,
+                s.TotalHours,
                 s.Status,
-                s.Notes,
-                s.Location,
-                s.DeviceId));
+                s.IsLate,
+                s.Notes));
 
         CreateMap<AttendanceRecord, AttendanceListDto>()
             .ConstructUsing(s => new AttendanceListDto(
                 s.Id,
-                s.EmployeeId,
                 $"{s.Employee.FirstName} {s.Employee.LastName}",
                 s.Date,
-                s.CheckIn,
-                s.CheckOut,
-                s.WorkHours,
+                s.CheckInTime,
+                s.CheckOutTime,
                 s.Status));
 
         // Notification
@@ -237,29 +228,33 @@ public class MappingProfile : Profile
         CreateMap<AuditLog, AuditLogDto>()
             .ConstructUsing(s => new AuditLogDto(
                 s.Id,
-                s.Action,
-                s.TableName,
-                s.RecordId,
-                s.OldValues,
-                s.NewValues,
                 s.UserId,
                 s.User != null ? $"{s.User.FirstName} {s.User.LastName}" : "System",
-                s.Timestamp));
+                s.ActionType,
+                s.EntityName,
+                s.EntityId,
+                s.OldValues,
+                s.NewValues,
+                s.IpAddress,
+                s.UserAgent,
+                s.CreatedAt));
 
         // Document
         CreateMap<Document, DocumentDto>()
             .ConstructUsing(s => new DocumentDto(
                 s.Id,
                 s.Title,
+                s.Description,
                 s.FileName,
-                s.FilePath,
+                s.FileType,
                 s.FileSize,
-                s.ContentType,
+                s.DocumentType,
                 s.Category,
-                s.UploadedAt,
-                s.UploadedById,
-                $"{s.UploadedBy.FirstName} {s.UploadedBy.LastName}",
                 s.EmployeeId,
-                s.Employee != null ? $"{s.Employee.FirstName} {s.Employee.LastName}" : null));
+                s.Employee != null ? $"{s.Employee.FirstName} {s.Employee.LastName}" : null,
+                s.UploadedById,
+                s.UploadedBy != null ? $"{s.UploadedBy.FirstName} {s.UploadedBy.LastName}" : "System",
+                s.Version,
+                s.CreatedAt));
     }
 }
