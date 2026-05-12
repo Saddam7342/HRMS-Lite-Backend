@@ -91,9 +91,7 @@ var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        var secret = !string.IsNullOrWhiteSpace(jwtSettings?.Secret)
-            ? jwtSettings.Secret
-            : "SuperSecretDefaultKeyForDevelopment_AtLeast32CharsLong!";
+        var secret = builder.Configuration["JwtSettings:Secret"] ?? "SuperSecretDefaultKeyForDevelopment_AtLeast32CharsLong!";
 
         options.TokenValidationParameters = new TokenValidationParameters
         {

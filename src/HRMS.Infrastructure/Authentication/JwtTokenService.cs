@@ -6,20 +6,17 @@ using HRMS.Application.Common.Interfaces;
 using HRMS.Domain.Entities;
 using HRMS.Infrastructure.Settings;
 using HRMS.Shared.Constants;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
 namespace HRMS.Infrastructure.Authentication;
 
 /// <summary>
 /// Generates JWT access tokens and refresh tokens.
-/// Single-company HRMS — no TenantId claim included.
-/// Claims: UserId, Email, Username, Roles, Permissions.
+/// Simplified to use direct IConfiguration for maximum reliability in production environments.
 /// </summary>
-public class JwtTokenService(IOptions<JwtSettings> jwtSettings) : IJwtTokenService
+public class JwtTokenService(IConfiguration configuration) : IJwtTokenService
 {
-    private readonly JwtSettings _jwtSettings = jwtSettings.Value;
-
     public string GenerateAccessToken(AppUser user)
     {
         var claims = new List<Claim>
@@ -32,7 +29,6 @@ public class JwtTokenService(IOptions<JwtSettings> jwtSettings) : IJwtTokenServi
             new(AppClaimTypes.FullName,         $"{user.FirstName} {user.LastName}".Trim())
         };
 
-        // Roles & Permissions from UserRoles
         foreach (var userRole in user.UserRoles)
         {
             if (userRole.Role == null) continue;
@@ -45,21 +41,19 @@ public class JwtTokenService(IOptions<JwtSettings> jwtSettings) : IJwtTokenServi
             }
         }
 
-        var secret = !string.IsNullOrWhiteSpace(_jwtSettings.Secret)
-            ? _jwtSettings.Secret
-            : "SuperSecretDefaultKeyForDevelopment_AtLeast32CharsLong!";
+        var secret   = configuration["JwtSettings:Secret"]  ?? "SuperSecretDefaultKeyForDevelopment_AtLeast32CharsLong!";
+        var issuer   = configuration["JwtSettings:Issuer"]  ?? "HRMS";
+        var audience = configuration["JwtSettings:Audience"] ?? "HRMS-Clients";
+        var expiry   = int.TryParse(configuration["JwtSettings:ExpiryMinutes"], out var min) ? min : 60;
 
         var key   = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var issuer = !string.IsNullOrWhiteSpace(_jwtSettings.Issuer) ? _jwtSettings.Issuer : "HRMS";
-        var audience = !string.IsNullOrWhiteSpace(_jwtSettings.Audience) ? _jwtSettings.Audience : "HRMS-Clients";
 
         var token = new JwtSecurityToken(
             issuer,
             audience,
             claims,
-            expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryMinutes),
+            expires: DateTime.UtcNow.AddMinutes(expiry),
             signingCredentials: creds
         );
 
@@ -76,12 +70,14 @@ public class JwtTokenService(IOptions<JwtSettings> jwtSettings) : IJwtTokenServi
 
     public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
     {
+        var secret = configuration["JwtSettings:Secret"] ?? "SuperSecretDefaultKeyForDevelopment_AtLeast32CharsLong!";
+
         var tokenValidationParameters = new TokenValidationParameters
         {
             ValidateAudience         = false,
             ValidateIssuer           = false,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret)),
+            IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
             ValidateLifetime         = false
         };
 
