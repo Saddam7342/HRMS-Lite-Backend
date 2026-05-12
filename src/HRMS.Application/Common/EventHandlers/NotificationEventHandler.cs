@@ -15,7 +15,8 @@ public class NotificationEventHandler(
     INotificationHandler<LeaveStatusChangedEvent>,
     INotificationHandler<ExpenseStatusChangedEvent>,
     INotificationHandler<TravelStatusChangedEvent>,
-    INotificationHandler<EmployeeCreatedEvent>
+    INotificationHandler<EmployeeCreatedEvent>,
+    INotificationHandler<OrganizationProvisionedEvent>
 {
     public async Task Handle(LeaveStatusChangedEvent notification, CancellationToken cancellationToken)
     {
@@ -117,6 +118,24 @@ public class NotificationEventHandler(
         catch (Exception ex) 
         { 
             logger.LogError(ex, "Failed to send welcome email."); 
+        }
+    }
+
+    public async Task Handle(OrganizationProvisionedEvent notification, CancellationToken cancellationToken)
+    {
+        var org = notification.Organization;
+        var title = $"Welcome to HRMS-Lite: {org.Name}";
+        var message = $"Hello, your organization '{org.Name}' has been provisioned. " +
+                      $"You can log in at your slug: {org.Slug}. " +
+                      $"Your temporary password is: {notification.TempPassword}";
+
+        try 
+        { 
+            await emailService.SendAsync(new EmailMessage(notification.AdminEmail, title, message), cancellationToken); 
+        }
+        catch (Exception ex) 
+        { 
+            logger.LogError(ex, "Failed to send organization welcome email."); 
         }
     }
 }

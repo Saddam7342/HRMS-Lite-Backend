@@ -98,8 +98,7 @@ public class CreateEmployeeHandler(
             };
 
             await unitOfWork.Users.AddAsync(user, cancellationToken);
-            await unitOfWork.CommitAsync(cancellationToken);
-
+            
             // 2. Create Employee
             var employee = new Employee
             {
@@ -123,16 +122,26 @@ public class CreateEmployeeHandler(
 
             await unitOfWork.Employees.AddAsync(employee, cancellationToken);
             
-            // 3. Assign Role (Explicitly using Entity to avoid enum collision)
-            var role = await unitOfWork.DbContext.Roles.FirstAsync(r => r.Name == "Employee", cancellationToken);
-            unitOfWork.DbContext.UserRoles.Add(new HRMS.Domain.Entities.UserRole { UserId = user.Id, RoleId = role.Id });
+            // 3. Assign Role (Using the Global Employee Role)
+            var role = await unitOfWork.DbContext.Roles
+                .FirstOrDefaultAsync(r => r.Name == "Employee", cancellationToken);
+            
+            if (role != null)
+            {
+                unitOfWork.DbContext.UserRoles.Add(new HRMS.Domain.Entities.UserRole 
+                { 
+                    UserId = user.Id, 
+                    RoleId = role.Id 
+                });
+            }
 
-            // 4. Seed Leave Balances
+            // 4. Seed Leave Balances for all active leave types
             var leaveTypes = await unitOfWork.LeaveTypes.GetAllActiveAsync(tenantContext.TenantId, cancellationToken);
             var currentYear = dateTimeProvider.UtcNow.Year;
 
             foreach (var lt in leaveTypes)
             {
+                // Skip gender-specific leaves that don't apply
                 if (lt.IsGenderSpecific && lt.ApplicableGender != employee.Gender) continue;
 
                 var balance = new LeaveBalance
@@ -147,9 +156,10 @@ public class CreateEmployeeHandler(
                 await unitOfWork.LeaveBalances.AddAsync(balance, cancellationToken);
             }
 
+            // SINGLE COMMIT: Everything succeeds or everything fails
             await unitOfWork.CommitAsync(cancellationToken);
 
-            // 5. Publish Event
+            // 5. Publish Event (This will trigger the Welcome Email)
             await mediator.Publish(new EmployeeCreatedEvent(employee, tempPassword), cancellationToken);
 
             return Result<Guid>.Success(employee.Id);

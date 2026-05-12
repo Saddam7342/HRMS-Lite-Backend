@@ -4,12 +4,14 @@ using HRMS.Domain.Enums;
 using HRMS.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
+using MediatR;
 
 namespace HRMS.Infrastructure.Services;
 
 public class OrganizationProvisioningService(
     IUnitOfWork unitOfWork,
-    IPasswordHasher passwordHasher) : IOrganizationProvisioningService
+    IPasswordHasher passwordHasher,
+    IMediator mediator) : IOrganizationProvisioningService
 {
     public async Task<Result<Guid>> ProvisionOrganizationAsync(
         string name,
@@ -46,7 +48,7 @@ public class OrganizationProvisioningService(
             await unitOfWork.CommitAsync(ct); // Save to get the ID
 
             // 4. Create Org Admin User
-            var tempPassword = "Welcome@123"; // TODO: Generate random password
+            var tempPassword = Guid.NewGuid().ToString("N").Substring(0, 10) + "1!Aa"; 
             var adminUser = new AppUser
             {
                 FirstName = "Admin",
@@ -75,6 +77,9 @@ public class OrganizationProvisioningService(
             await SeedDefaultSettingsAsync(organization.Id, ct);
 
             await unitOfWork.CommitAsync(ct);
+
+            // 7. Notify Org Admin
+            await mediator.Publish(new HRMS.Domain.Events.OrganizationProvisionedEvent(organization, adminEmail, tempPassword), ct);
 
             return Result<Guid>.Success(organization.Id);
         }
