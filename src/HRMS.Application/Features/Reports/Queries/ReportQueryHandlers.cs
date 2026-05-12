@@ -1,3 +1,4 @@
+using HRMS.Application.Common;
 using HRMS.Application.Common.Interfaces;
 using HRMS.Application.Features.Reports.DTOs;
 using HRMS.Domain.Enums;
@@ -21,9 +22,16 @@ public class ReportQueryHandlers(
     public async Task<Result<LeaveSummaryDto>> Handle(GetLeaveAnalyticsQuery request, CancellationToken cancellationToken)
     {
         var query = unitOfWork.DbContext.LeaveRequests.AsNoTracking();
-        
-        if (currentUserService.Roles.Contains("Manager") && !currentUserService.Roles.Contains("OrganizationAdmin"))
-            query = query.Where(x => x.Employee.ManagerId == currentUserService.UserId);
+
+        if (currentUserService.Roles.Contains("Manager") && !OrgRoles.IsCompanyAdmin(currentUserService.Roles))
+        {
+            if (!currentUserService.UserId.HasValue)
+                return Result<LeaveSummaryDto>.Success(new LeaveSummaryDto(0, 0, 0, 0, []));
+            var mgr = await unitOfWork.Employees.GetByUserIdAsync(currentUserService.UserId.Value, cancellationToken);
+            if (mgr == null)
+                return Result<LeaveSummaryDto>.Success(new LeaveSummaryDto(0, 0, 0, 0, []));
+            query = query.Where(x => x.Employee.ManagerId == mgr.Id);
+        }
 
         if (request.StartDate.HasValue) query = query.Where(x => x.StartDate >= request.StartDate.Value);
         if (request.EndDate.HasValue) query = query.Where(x => x.EndDate <= request.EndDate.Value);
@@ -45,8 +53,15 @@ public class ReportQueryHandlers(
     {
         var query = unitOfWork.DbContext.ExpenseClaims.AsNoTracking();
 
-        if (currentUserService.Roles.Contains("Manager") && !currentUserService.Roles.Contains("OrganizationAdmin"))
-            query = query.Where(x => x.Employee.ManagerId == currentUserService.UserId);
+        if (currentUserService.Roles.Contains("Manager") && !OrgRoles.IsCompanyAdmin(currentUserService.Roles))
+        {
+            if (!currentUserService.UserId.HasValue)
+                return Result<ExpenseSummaryDto>.Success(new ExpenseSummaryDto(0, 0, 0, []));
+            var mgr = await unitOfWork.Employees.GetByUserIdAsync(currentUserService.UserId.Value, cancellationToken);
+            if (mgr == null)
+                return Result<ExpenseSummaryDto>.Success(new ExpenseSummaryDto(0, 0, 0, []));
+            query = query.Where(x => x.Employee.ManagerId == mgr.Id);
+        }
 
         if (request.StartDate.HasValue) query = query.Where(x => x.CreatedAt >= request.StartDate.Value);
         if (request.EndDate.HasValue) query = query.Where(x => x.CreatedAt <= request.EndDate.Value);
@@ -67,8 +82,15 @@ public class ReportQueryHandlers(
     {
         var query = unitOfWork.DbContext.AttendanceRecords.AsNoTracking();
 
-        if (currentUserService.Roles.Contains("Manager") && !currentUserService.Roles.Contains("OrganizationAdmin"))
-            query = query.Where(x => x.Employee.ManagerId == currentUserService.UserId);
+        if (currentUserService.Roles.Contains("Manager") && !OrgRoles.IsCompanyAdmin(currentUserService.Roles))
+        {
+            if (!currentUserService.UserId.HasValue)
+                return Result<AttendanceSummaryDto>.Success(new AttendanceSummaryDto(0, 0, 0, 0));
+            var mgr = await unitOfWork.Employees.GetByUserIdAsync(currentUserService.UserId.Value, cancellationToken);
+            if (mgr == null)
+                return Result<AttendanceSummaryDto>.Success(new AttendanceSummaryDto(0, 0, 0, 0));
+            query = query.Where(x => x.Employee.ManagerId == mgr.Id);
+        }
 
         if (request.StartDate.HasValue) query = query.Where(x => x.Date >= request.StartDate.Value);
         if (request.EndDate.HasValue) query = query.Where(x => x.Date <= request.EndDate.Value);

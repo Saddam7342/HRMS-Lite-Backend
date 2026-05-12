@@ -1,53 +1,43 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '../lib/api'
-import { Btn, Card, Input, PageTitle, TextArea, Alert, Spinner } from '../components/Ui'
-import { apiErrorMessage, todayISODate } from '../lib/util'
+import type { TeamTravelScheduleDto, TravelRequestDto } from '../lib/types'
+import { Btn, Card, Input, PageTitle, Alert, Spinner } from '../components/Ui'
+import { apiErrorMessage, formatDate, money, todayISODate } from '../lib/util'
 import { hasRole, useAuth } from '../context/AuthContext'
 
 export default function TravelPage() {
   const { roles } = useAuth()
-  const manager = hasRole(roles, 'Admin') || hasRole(roles, 'Manager')
+  const approver = hasRole(roles, 'Admin') || hasRole(roles, 'Manager')
 
-  const [mine, setMine] = useState<unknown[]>([])
-  const [pending, setPending] = useState<Array<{ id: string }>>([])
+  const [pending, setPending] = useState<TravelRequestDto[]>([])
+  const [schedule, setSchedule] = useState<TeamTravelScheduleDto[]>([])
+  const [schedStart, setSchedStart] = useState(todayISODate())
+  const [schedEnd, setSchedEnd] = useState(todayISODate())
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
-  const [destination, setDestination] = useState('')
-  const [purpose, setPurpose] = useState('')
-  const [fromDate, setFromDate] = useState(todayISODate())
-  const [toDate, setToDate] = useState(todayISODate())
-  const [budget, setBudget] = useState('')
+  const loadPending = useCallback(async () => {
+    if (!approver) return
+    const p = await api.getPendingTravel()
+    if (p.success && p.data) setPending(p.data)
+  }, [approver])
+
+  const loadSchedule = useCallback(async () => {
+    if (!approver) return
+    const s = await api.getTeamTravelSchedule(`${schedStart}T00:00:00Z`, `${schedEnd}T23:59:59Z`)
+    if (s.success && s.data) setSchedule(s.data)
+  }, [approver, schedStart, schedEnd])
 
   const load = useCallback(async () => {
     setLoading(true)
-    const m = await api.getMyTravel()
-    if (m.success && m.data) setMine(m.data as unknown[])
-    if (manager) {
-      const p = await api.getPendingTravel()
-      if (p.success && p.data) setPending(p.data as { id: string }[])
-    } else setPending([])
+    await loadPending()
+    await loadSchedule()
     setLoading(false)
-  }, [manager])
+  }, [loadPending, loadSchedule])
 
   useEffect(() => {
     void load()
   }, [load])
-
-  async function createReq(e: React.FormEvent) {
-    e.preventDefault()
-    setMsg(null)
-    const body: Record<string, unknown> = {
-      destination,
-      purpose,
-      fromDate: `${fromDate}T00:00:00Z`,
-      toDate: `${toDate}T00:00:00Z`,
-    }
-    if (budget) body.estimatedBudget = Number(budget)
-    const r = await api.createTravel(body)
-    setMsg(r.success ? { type: 'ok', text: 'Travel request created.' } : { type: 'err', text: apiErrorMessage(r) })
-    await load()
-  }
 
   async function approve(id: string) {
     const r = await api.approveTravel(id)
@@ -56,7 +46,7 @@ export default function TravelPage() {
   }
 
   async function reject(id: string) {
-    const reason = prompt('Reason?') ?? ''
+    const reason = window.prompt('Reason for rejection?') ?? ''
     const r = await api.rejectTravel(id, reason || null)
     setMsg(r.success ? { type: 'ok', text: 'Rejected.' } : { type: 'err', text: apiErrorMessage(r) })
     await load()
@@ -64,56 +54,102 @@ export default function TravelPage() {
 
   return (
     <div>
-      <PageTitle title="Travel" subtitle="Requests and approvals" />
+      <PageTitle
+        title="Travel"
+        subtitle="Approve travel requests and view the team schedule (employee requests go through mobile)."
+      />
       {msg && (
         <div className="mb-4">
           <Alert type={msg.type === 'ok' ? 'ok' : 'err'}>{msg.text}</Alert>
         </div>
       )}
 
-      <Card className="mb-8">
-        <h3 className="mb-4 text-sm font-semibold">New request</h3>
-        {loading ? (
-          <Spinner />
-        ) : (
-          <form onSubmit={createReq} className="grid gap-4 sm:grid-cols-2">
-            <Input label="Destination" value={destination} onChange={(e) => setDestination(e.target.value)} required className="sm:col-span-2" />
-            <div className="sm:col-span-2">
-              <TextArea label="Purpose" value={purpose} onChange={(e) => setPurpose(e.target.value)} required rows={2} />
-            </div>
-            <Input type="date" label="From" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-            <Input type="date" label="To" value={toDate} onChange={(e) => setToDate(e.target.value)} />
-            <Input label="Budget (optional)" type="number" step="0.01" value={budget} onChange={(e) => setBudget(e.target.value)} />
-            <div className="flex items-end">
-              <Btn type="submit">Submit</Btn>
-            </div>
-          </form>
-        )}
-      </Card>
+      {!approver && <Alert type="info">Travel approvals are available to Admin and Manager roles.</Alert>}
 
-      <Card className="mb-8">
-        <h3 className="mb-4 text-sm font-semibold">My travel</h3>
-        <pre className="max-h-64 overflow-auto text-xs">{JSON.stringify(mine, null, 2)}</pre>
-      </Card>
-
-      {manager && (
-        <Card>
-          <h3 className="mb-4 text-sm font-semibold">Pending approvals</h3>
-          <div className="space-y-3">
-            {pending.map((row) => (
-              <div key={row.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-slate-50 px-4 py-2">
-                <code className="text-xs">{row.id}</code>
-                <div className="flex gap-2">
-                  <Btn onClick={() => void approve(row.id)}>Approve</Btn>
-                  <Btn variant="danger" onClick={() => void reject(row.id)}>
-                    Reject
-                  </Btn>
-                </div>
+      {approver && (
+        <>
+          <Card className="mb-8">
+            <h3 className="mb-4 text-sm font-semibold text-slate-800">Pending approvals</h3>
+            {loading ? (
+              <Spinner />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-slate-500">
+                      <th className="pb-3 font-medium">Employee</th>
+                      <th className="pb-3 font-medium">Destination</th>
+                      <th className="pb-3 font-medium">From</th>
+                      <th className="pb-3 font-medium">To</th>
+                      <th className="pb-3 font-medium">Budget</th>
+                      <th className="pb-3 font-medium">Purpose</th>
+                      <th className="pb-3 font-medium text-right"> </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pending.map((row) => (
+                      <tr key={row.id} className="border-b border-slate-100">
+                        <td className="py-3 font-medium text-slate-900">{row.employeeName}</td>
+                        <td className="py-3">{row.destination}</td>
+                        <td className="py-3 text-slate-600">{formatDate(row.fromDate)}</td>
+                        <td className="py-3 text-slate-600">{formatDate(row.toDate)}</td>
+                        <td className="py-3">{row.estimatedBudget != null ? money(row.estimatedBudget) : '—'}</td>
+                        <td className="max-w-xs truncate py-3 text-slate-600" title={row.purpose}>
+                          {row.purpose}
+                        </td>
+                        <td className="py-3 text-right">
+                          <div className="flex justify-end gap-2">
+                            <Btn onClick={() => void approve(row.id)}>Approve</Btn>
+                            <Btn variant="danger" onClick={() => void reject(row.id)}>
+                              Reject
+                            </Btn>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {pending.length === 0 && <p className="mt-4 text-sm text-slate-500">No pending requests.</p>}
               </div>
-            ))}
-            {!pending.length && <p className="text-sm text-slate-500">None pending.</p>}
-          </div>
-        </Card>
+            )}
+          </Card>
+
+          <Card>
+            <h3 className="mb-4 text-sm font-semibold text-slate-800">Team travel schedule</h3>
+            <div className="mb-4 flex flex-wrap items-end gap-4">
+              <Input type="date" label="From" value={schedStart} onChange={(e) => setSchedStart(e.target.value)} />
+              <Input type="date" label="To" value={schedEnd} onChange={(e) => setSchedEnd(e.target.value)} />
+              <Btn onClick={() => void loadSchedule()}>Load</Btn>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 text-slate-500">
+                    <th className="pb-3 font-medium">Employee</th>
+                    <th className="pb-3 font-medium">Destination</th>
+                    <th className="pb-3 font-medium">From</th>
+                    <th className="pb-3 font-medium">To</th>
+                    <th className="pb-3 font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {schedule.map((row) => (
+                    <tr key={row.id} className="border-b border-slate-100">
+                      <td className="py-3 font-medium">{row.employeeName}</td>
+                      <td className="py-3">{row.destination}</td>
+                      <td className="py-3">{formatDate(row.fromDate)}</td>
+                      <td className="py-3">{formatDate(row.toDate)}</td>
+                      <td className="py-3">{row.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {schedule.length === 0 && !loading && (
+                <p className="mt-4 text-sm text-slate-500">No travel in this range.</p>
+              )}
+            </div>
+          </Card>
+        </>
       )}
     </div>
   )

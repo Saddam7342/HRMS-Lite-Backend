@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import * as api from '../lib/api'
 import type { DepartmentListDto, EmployeeListDto } from '../lib/types'
 import { Btn, Card, Input, PageTitle, Select, Alert, Spinner } from '../components/Ui'
@@ -10,6 +11,8 @@ export default function EmployeesPage() {
   const canManage = hasRole(roles, 'Admin')
 
   const [page, setPage] = useState(1)
+  const [search, setSearch] = useState('')
+  const [searchApplied, setSearchApplied] = useState('')
   const [items, setItems] = useState<EmployeeListDto[]>([])
   const [totalPages, setTotalPages] = useState(1)
   const [depts, setDepts] = useState<DepartmentListDto[]>([])
@@ -30,7 +33,11 @@ export default function EmployeesPage() {
   const load = useCallback(async () => {
     setLoading(true)
     const [p, d] = await Promise.all([
-      api.getEmployees({ pageNumber: page, pageSize: 10 }),
+      api.getEmployees({
+        pageNumber: page,
+        pageSize: 15,
+        searchTerm: searchApplied.trim() || undefined,
+      }),
       api.getDepartments(),
     ])
     if (p.success && p.data) {
@@ -39,7 +46,7 @@ export default function EmployeesPage() {
     }
     if (d.success && d.data) setDepts(d.data as DepartmentListDto[])
     setLoading(false)
-  }, [page])
+  }, [page, searchApplied])
 
   useEffect(() => {
     load()
@@ -73,7 +80,7 @@ export default function EmployeesPage() {
 
   return (
     <div>
-      <PageTitle title="Employees" subtitle="Directory & onboarding" />
+      <PageTitle title="Employees" subtitle="Directory, profiles, and onboarding" />
       {msg && (
         <div className="mb-4">
           <Alert type={msg.type === 'ok' ? 'ok' : 'err'}>{msg.text}</Alert>
@@ -115,6 +122,33 @@ export default function EmployeesPage() {
       )}
 
       <Card>
+        <div className="mb-4 flex flex-wrap items-end gap-3">
+          <Input
+            label="Search"
+            value={search}
+            onChange={(ev) => setSearch(ev.target.value)}
+            placeholder="Name or code"
+            className="max-w-xs"
+          />
+          <Btn
+            onClick={() => {
+              setSearchApplied(search)
+              setPage(1)
+            }}
+          >
+            Search
+          </Btn>
+          <Btn
+            variant="secondary"
+            onClick={() => {
+              setSearch('')
+              setSearchApplied('')
+              setPage(1)
+            }}
+          >
+            Clear
+          </Btn>
+        </div>
         {loading ? (
           <Spinner />
         ) : (
@@ -127,6 +161,7 @@ export default function EmployeesPage() {
                     <th className="pb-3 font-medium">Code</th>
                     <th className="pb-3 font-medium">Department</th>
                     <th className="pb-3 font-medium">Status</th>
+                    <th className="pb-3 font-medium"> </th>
                     {canManage && <th className="pb-3 font-medium"> </th>}
                   </tr>
                 </thead>
@@ -137,6 +172,11 @@ export default function EmployeesPage() {
                       <td className="py-3 text-slate-600">{e.employeeCode}</td>
                       <td className="py-3">{e.departmentName ?? '—'}</td>
                       <td className="py-3">{e.status}</td>
+                      <td className="py-3">
+                        <Link to={`/employees/${e.id}`} className="text-sm font-medium text-indigo-600 hover:text-indigo-800">
+                          View
+                        </Link>
+                      </td>
                       {canManage && (
                         <td className="py-3">
                           <Btn

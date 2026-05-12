@@ -26,6 +26,7 @@ public static class IdentitySeeder
         {
             await SeedRolesAndPermissionsAsync(context);
             await SeedAdminUserAsync(context, passwordHasher);
+            await SeedAdminEmployeeIfMissingAsync(context);
             await SeedDefaultLeaveTypesAsync(context);
             await SeedDefaultExpenseCategoriesAsync(context);
         }
@@ -161,6 +162,35 @@ public static class IdentitySeeder
             context.UserRoles.Add(new HRMS.Domain.Entities.UserRole { UserId = admin.Id, RoleId = adminRole.Id });
             await context.SaveChangesAsync();
         }
+    }
+
+    /// <summary>
+    /// Approvals and attendance team queries resolve the current user via <see cref="Employee"/> —
+    /// ensure the default admin has an employee profile.
+    /// </summary>
+    private static async Task SeedAdminEmployeeIfMissingAsync(AppDbContext context)
+    {
+        const string adminEmail = "admin@company.com";
+        var user = await context.Users.FirstOrDefaultAsync(x => x.Email == adminEmail);
+        if (user == null) return;
+
+        if (await context.Employees.AnyAsync(e => e.UserId == user.Id)) return;
+
+        context.Employees.Add(new Employee
+        {
+            UserId = user.Id,
+            EmployeeCode = "ADM001",
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email,
+            Gender = Gender.Male,
+            DateOfBirth = new DateTime(1990, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            HireDate = DateTime.UtcNow.Date,
+            Designation = "Administrator",
+            Status = EmployeeStatus.Active,
+            IsActive = true,
+        });
+        await context.SaveChangesAsync();
     }
 
     // ---------------------------------------------------------------

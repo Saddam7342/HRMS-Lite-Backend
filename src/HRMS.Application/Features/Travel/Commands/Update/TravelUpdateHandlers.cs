@@ -1,3 +1,4 @@
+using HRMS.Application.Common;
 using HRMS.Application.Common.Interfaces;
 using HRMS.Domain.Enums;
 using HRMS.Shared.Models;
@@ -59,7 +60,7 @@ public class TravelUpdateHandlers(
         var employee = await unitOfWork.Employees.GetByUserIdAsync(userId ?? Guid.Empty, cancellationToken);
         
         bool isOwner = employee != null && travel.EmployeeId == employee.Id;
-        bool isOrgAdmin = currentUserService.Roles.Contains("OrganizationAdmin");
+        bool isOrgAdmin = OrgRoles.IsCompanyAdmin(currentUserService.Roles);
 
         if (!isOwner && !isOrgAdmin)
             return Result.Failure("Unauthorized.");

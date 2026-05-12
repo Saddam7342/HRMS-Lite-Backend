@@ -1,3 +1,4 @@
+using HRMS.Application.Common;
 using HRMS.Application.Common.Interfaces;
 using HRMS.Domain.Enums;
 using HRMS.Domain.Events;
@@ -29,7 +30,7 @@ public class TravelApprovalHandler(
         if (approver == null) return Result.Failure("Approver profile not found.");
 
         // Security: Approver must be Manager or OrgAdmin
-        bool isOrgAdmin = currentUserService.Roles.Contains("OrganizationAdmin");
+        bool isOrgAdmin = OrgRoles.IsCompanyAdmin(currentUserService.Roles);
         bool isManager = travel.Employee.ManagerId == approver.Id;
 
         if (!isOrgAdmin && !isManager)

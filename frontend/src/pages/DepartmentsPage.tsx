@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '../lib/api'
 import type { DepartmentHierarchyDto, DepartmentListDto } from '../lib/types'
-import { Btn, Card, Input, PageTitle, TextArea, Alert, Spinner } from '../components/Ui'
+import { Btn, Card, Input, PageTitle, TextArea, Alert, Spinner, Select } from '../components/Ui'
 import { apiErrorMessage } from '../lib/util'
 import { hasRole, useAuth } from '../context/AuthContext'
 
@@ -18,6 +18,18 @@ export default function DepartmentsPage() {
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [desc, setDesc] = useState('')
+
+  const [editOpen, setEditOpen] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState({
+    name: '',
+    code: '',
+    description: '',
+    parentDepartmentId: '',
+    departmentHeadId: '',
+  })
+  const [editLoading, setEditLoading] = useState(false)
+  const [headChoices, setHeadChoices] = useState<{ id: string; fullName: string }[]>([])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -51,6 +63,62 @@ export default function DepartmentsPage() {
     await load()
   }
 
+  async function toggleActive(d: DepartmentListDto) {
+    const r = d.isActive ? await api.deactivateDepartment(d.id) : await api.activateDepartment(d.id)
+    setMsg(r.success ? { type: 'ok', text: 'Updated.' } : { type: 'err', text: apiErrorMessage(r) })
+    await load()
+  }
+
+  async function openEdit(id: string) {
+    setEditId(id)
+    setEditOpen(true)
+    setEditLoading(true)
+    setMsg(null)
+    const [dep, emps] = await Promise.all([
+      api.getDepartment(id),
+      api.getEmployees({ pageNumber: 1, pageSize: 300 }),
+    ])
+    if (dep.success && dep.data) {
+      const d = dep.data
+      setEditForm({
+        name: d.name,
+        code: d.code,
+        description: d.description ?? '',
+        parentDepartmentId: d.parentDepartmentId ?? '',
+        departmentHeadId: d.departmentHeadId ?? '',
+      })
+    }
+    if (emps.success && emps.data)
+      setHeadChoices(
+        (emps.data.items as { id: string; fullName: string }[]).map((x) => ({
+          id: x.id,
+          fullName: x.fullName,
+        })),
+      )
+    setEditLoading(false)
+  }
+
+  async function saveEdit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editId || !admin) return
+    setEditLoading(true)
+    const r = await api.updateDepartment(editId, {
+      id: editId,
+      name: editForm.name,
+      code: editForm.code,
+      description: editForm.description || null,
+      parentDepartmentId: editForm.parentDepartmentId || null,
+      departmentHeadId: editForm.departmentHeadId || null,
+    })
+    setEditLoading(false)
+    setMsg(r.success ? { type: 'ok', text: 'Department updated.' } : { type: 'err', text: apiErrorMessage(r) })
+    if (r.success) {
+      setEditOpen(false)
+      setEditId(null)
+      await load()
+    }
+  }
+
   function renderTree(nodes: DepartmentHierarchyDto[], depth = 0) {
     return (
       <ul className={depth ? 'ml-4 border-l border-slate-200 pl-4' : ''}>
@@ -58,6 +126,9 @@ export default function DepartmentsPage() {
           <li key={n.id} className="py-1.5">
             <span className="font-medium text-slate-800">{n.name}</span>
             <span className="ml-2 text-xs text-slate-500">{n.code}</span>
+            {n.departmentHeadName && (
+              <span className="ml-2 text-xs text-slate-400">Head: {n.departmentHeadName}</span>
+            )}
             {n.children?.length ? <div className="mt-1">{renderTree(n.children, depth + 1)}</div> : null}
           </li>
         ))}
@@ -65,12 +136,14 @@ export default function DepartmentsPage() {
     )
   }
 
+  const parentOptions = list.filter((d) => d.id !== editId)
+
   return (
     <div>
-      <PageTitle title="Departments" subtitle="Org structure and directory" />
+      <PageTitle title="Departments" subtitle="Org structure, hierarchy, and administration" />
       {msg && <Alert type={msg.type === 'ok' ? 'ok' : 'err'}>{msg.text}</Alert>}
 
-      <div className="mb-6 flex gap-2">
+      <div className="mb-6 mt-4 flex gap-2">
         <Btn variant={tab === 'list' ? 'primary' : 'secondary'} onClick={() => setTab('list')}>
           List
         </Btn>
@@ -108,7 +181,7 @@ export default function DepartmentsPage() {
                   <th className="pb-3 pr-4 font-medium">Head</th>
                   <th className="pb-3 pr-4 font-medium">Employees</th>
                   <th className="pb-3 font-medium">Active</th>
-                  {admin && <th className="pb-3 pl-4 font-medium"> </th>}
+                  {admin && <th className="pb-3 pl-4 font-medium text-right"> </th>}
                 </tr>
               </thead>
               <tbody>
@@ -121,9 +194,17 @@ export default function DepartmentsPage() {
                     <td className="py-3">{d.isActive ? 'Yes' : 'No'}</td>
                     {admin && (
                       <td className="py-3 pl-4 text-right">
-                        <Btn variant="ghost" className="text-rose-600 hover:bg-rose-50" onClick={() => remove(d.id)}>
-                          Delete
-                        </Btn>
+                        <div className="flex flex-wrap justify-end gap-2">
+                          <Btn variant="secondary" onClick={() => void openEdit(d.id)}>
+                            Edit
+                          </Btn>
+                          <Btn variant="ghost" onClick={() => void toggleActive(d)}>
+                            {d.isActive ? 'Deactivate' : 'Activate'}
+                          </Btn>
+                          <Btn variant="ghost" className="text-rose-600 hover:bg-rose-50" onClick={() => remove(d.id)}>
+                            Delete
+                          </Btn>
+                        </div>
                       </td>
                     )}
                   </tr>
@@ -135,6 +216,67 @@ export default function DepartmentsPage() {
           renderTree(tree)
         )}
       </Card>
+
+      {editOpen && admin && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <Card className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto shadow-2xl">
+            <button
+              type="button"
+              className="absolute right-4 top-4 text-sm text-slate-400 hover:text-slate-700"
+              onClick={() => setEditOpen(false)}
+            >
+              ✕
+            </button>
+            <h3 className="mb-4 text-sm font-semibold text-slate-800">Edit department</h3>
+            {editLoading ? (
+              <Spinner />
+            ) : (
+              <form onSubmit={saveEdit} className="space-y-4">
+                <Input label="Name" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} required />
+                <Input label="Code" value={editForm.code} onChange={(e) => setEditForm({ ...editForm, code: e.target.value })} required />
+                <TextArea
+                  label="Description"
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  rows={2}
+                />
+                <Select
+                  label="Parent department"
+                  value={editForm.parentDepartmentId}
+                  onChange={(e) => setEditForm({ ...editForm, parentDepartmentId: e.target.value })}
+                >
+                  <option value="">— None —</option>
+                  {parentOptions.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name}
+                    </option>
+                  ))}
+                </Select>
+                <Select
+                  label="Department head"
+                  value={editForm.departmentHeadId}
+                  onChange={(e) => setEditForm({ ...editForm, departmentHeadId: e.target.value })}
+                >
+                  <option value="">— None —</option>
+                  {headChoices.map((h) => (
+                    <option key={h.id} value={h.id}>
+                      {h.fullName}
+                    </option>
+                  ))}
+                </Select>
+                <div className="flex gap-2">
+                  <Btn type="submit" disabled={editLoading}>
+                    Save
+                  </Btn>
+                  <Btn type="button" variant="secondary" onClick={() => setEditOpen(false)}>
+                    Cancel
+                  </Btn>
+                </div>
+              </form>
+            )}
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

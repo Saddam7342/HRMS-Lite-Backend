@@ -1,3 +1,4 @@
+using HRMS.Application.Common;
 using HRMS.Application.Common.Interfaces;
 using HRMS.Domain.Enums;
 using HRMS.Shared.Models;
@@ -17,7 +18,7 @@ public class CancelLeaveRequestHandler(
         if (leaveRequest == null) return Result.Failure("Leave request not found.");
 
         var employee = await unitOfWork.Employees.GetByUserIdAsync(currentUserService.UserId ?? Guid.Empty, cancellationToken);
-        if (employee == null || (leaveRequest.EmployeeId != employee.Id && !currentUserService.Roles.Contains("OrganizationAdmin")))
+        if (employee == null || (leaveRequest.EmployeeId != employee.Id && !OrgRoles.IsCompanyAdmin(currentUserService.Roles)))
             return Result.Failure("You are not authorized to cancel this request.");
 
         if (leaveRequest.Status == LeaveRequestStatus.Cancelled || leaveRequest.Status == LeaveRequestStatus.Rejected)

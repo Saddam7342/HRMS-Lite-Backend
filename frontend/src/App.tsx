@@ -16,6 +16,7 @@ import ReportsPage from './pages/ReportsPage'
 import AuditPage from './pages/AuditPage'
 import SystemPage from './pages/SystemPage'
 import ProfilePage from './pages/ProfilePage'
+import EmployeeDetailPage from './pages/EmployeeDetailPage'
 
 function RequireAuth() {
   const { user, bootstrapping } = useAuth()
@@ -48,6 +49,7 @@ export default function App() {
               <Route path="/" element={<DashboardPage />} />
               <Route path="/departments" element={<DepartmentsPage />} />
               <Route path="/employees" element={<EmployeesPage />} />
+              <Route path="/employees/:id" element={<EmployeeDetailPage />} />
               <Route path="/attendance" element={<AttendancePage />} />
               <Route path="/leaves" element={<LeavesPage />} />
               <Route path="/expenses" element={<ExpensesPage />} />

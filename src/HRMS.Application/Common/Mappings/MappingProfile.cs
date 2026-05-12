@@ -22,9 +22,16 @@ public class MappingProfile : Profile
             .ForMember(d => d.DepartmentName, opt => opt.MapFrom(s => s.Department != null ? s.Department.Name : null))
             .ForMember(d => d.ManagerName, opt => opt.MapFrom(s => s.Manager != null ? $"{s.Manager.FirstName} {s.Manager.LastName}" : null));
 
+        // AutoMapper 12 + positional records: use explicit construction (no parameterless ctor).
         CreateMap<Employee, EmployeeListDto>()
-            .ForMember(d => d.FullName, opt => opt.MapFrom(s => $"{s.FirstName} {s.LastName}"))
-            .ForMember(d => d.DepartmentName, opt => opt.MapFrom(s => s.Department != null ? s.Department.Name : null));
+            .ConstructUsing(s => new EmployeeListDto(
+                s.Id,
+                s.EmployeeCode,
+                $"{s.FirstName} {s.LastName}",
+                s.Designation,
+                s.Department != null ? s.Department.Name : null,
+                s.Status,
+                s.ProfileImageUrl));
 
         CreateMap<Employee, EmployeeProfileDto>()
             .ForMember(d => d.DepartmentName, opt => opt.MapFrom(s => s.Department != null ? s.Department.Name : null))

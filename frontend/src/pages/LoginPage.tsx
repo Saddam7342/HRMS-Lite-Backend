@@ -49,21 +49,23 @@ export default function LoginPage() {
           {err && <Alert type="err">{err}</Alert>}
           <Input
             label="Email or username"
+            labelClassName="text-slate-300"
             type="text"
             autoComplete="username"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500"
+            className="border-slate-600 bg-slate-800 text-white placeholder:text-slate-400 focus:border-indigo-400 focus:ring-indigo-500/40"
           />
           <Input
             label="Password"
+            labelClassName="text-slate-300"
             type="password"
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500"
+            className="border-slate-600 bg-slate-800 text-white placeholder:text-slate-400 focus:border-indigo-400 focus:ring-indigo-500/40"
           />
           <Btn type="submit" className="w-full py-3" disabled={loading}>
             {loading ? (

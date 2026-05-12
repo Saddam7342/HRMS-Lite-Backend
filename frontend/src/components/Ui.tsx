@@ -1,7 +1,17 @@
 import type { ReactNode } from 'react'
+import { twMerge } from 'tailwind-merge'
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/50 ${className}`}>{children}</div>
+  return (
+    <div
+      className={twMerge(
+        'rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/50',
+        className,
+      )}
+    >
+      {children}
+    </div>
+  )
 }
 
 export function Btn({
@@ -37,15 +47,26 @@ export function Btn({
   )
 }
 
-export function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label?: string }) {
-  const { label, className = '', id, ...rest } = props
+export function Input(
+  props: React.InputHTMLAttributes<HTMLInputElement> & { label?: string; labelClassName?: string },
+) {
+  const { label, labelClassName = '', className = '', id, ...rest } = props
   const tid = id ?? rest.name
   return (
     <label className="block">
-      {label && <span className="mb-1.5 block text-sm font-medium text-slate-600">{label}</span>}
+      {label && (
+        <span
+          className={twMerge('mb-1.5 block text-sm font-medium text-slate-600', labelClassName)}
+        >
+          {label}
+        </span>
+      )}
       <input
         id={tid}
-        className={`w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none ring-indigo-500/0 transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30 ${className}`}
+        className={twMerge(
+          'w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none ring-indigo-500/0 transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30',
+          className,
+        )}
         {...rest}
       />
     </label>
@@ -58,7 +79,10 @@ export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement> & { 
     <label className="block">
       {label && <span className="mb-1.5 block text-sm font-medium text-slate-600">{label}</span>}
       <select
-        className={`w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30 ${className}`}
+        className={twMerge(
+          'w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30',
+          className,
+        )}
         {...rest}
       >
         {children}
@@ -73,7 +97,10 @@ export function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
     <label className="block">
       {label && <span className="mb-1.5 block text-sm font-medium text-slate-600">{label}</span>}
       <textarea
-        className={`w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30 ${className}`}
+        className={twMerge(
+          'w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30',
+          className,
+        )}
         {...rest}
       />
     </label>

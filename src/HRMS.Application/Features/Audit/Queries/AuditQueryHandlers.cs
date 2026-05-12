@@ -1,4 +1,5 @@
 using AutoMapper;
+using HRMS.Application.Common;
 using HRMS.Application.Common.Interfaces;
 using HRMS.Application.Features.Audit.DTOs;
 using HRMS.Shared.Models;
@@ -35,7 +36,7 @@ public class AuditQueryHandlers(
     public async Task<Result<IReadOnlyList<AuditLogDto>>> Handle(GetUserActivityHistoryQuery request, CancellationToken cancellationToken)
     {
         // Security check: Only Admins can view other users' activity
-        if (currentUserService.UserId != request.UserId && !currentUserService.Roles.Contains("OrganizationAdmin"))
+        if (currentUserService.UserId != request.UserId && !OrgRoles.IsCompanyAdmin(currentUserService.Roles))
             return Result<IReadOnlyList<AuditLogDto>>.Failure("Unauthorized.");
 
         var logs = await unitOfWork.AuditLogs.GetQueryable()
@@ -50,7 +51,7 @@ public class AuditQueryHandlers(
 
     public async Task<Result<IReadOnlyList<AuditLogDto>>> Handle(GetSystemAuditLogsQuery request, CancellationToken cancellationToken)
     {
-        if (!currentUserService.Roles.Contains("OrganizationAdmin"))
+        if (!OrgRoles.IsCompanyAdmin(currentUserService.Roles))
             return Result<IReadOnlyList<AuditLogDto>>.Failure("Unauthorized.");
 
         var logs = await unitOfWork.AuditLogs.GetQueryable()

@@ -1,3 +1,4 @@
+using HRMS.Application.Common;
 using HRMS.Application.Common.Interfaces;
 using HRMS.Domain.Enums;
 using HRMS.Domain.Events;
@@ -31,7 +32,7 @@ public class LeaveApprovalHandler(
         var employee = leaveRequest.Employee;
         if (employee == null) return Result.Failure("Employee not found.");
 
-        bool isOrgAdmin = currentUserService.Roles.Contains("OrganizationAdmin");
+        bool isOrgAdmin = OrgRoles.IsCompanyAdmin(currentUserService.Roles);
         bool isManager = employee.ManagerId == approver.Id;
 
         if (!isOrgAdmin && !isManager)

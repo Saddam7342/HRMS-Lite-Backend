@@ -1,4 +1,25 @@
-import type { ApiResponse, CurrentUserDto, DepartmentHierarchyDto, DepartmentListDto, EmployeeListDto, EmployeeProfileDto, LoginResponse, PagedResult, TokenDto } from './types'
+import type {
+  ApiResponse,
+  AttendanceDto,
+  AttendanceListDto,
+  CurrentUserDto,
+  DepartmentDto,
+  DepartmentHierarchyDto,
+  DepartmentListDto,
+  EmployeeListDto,
+  EmployeeProfileDto,
+  LoginResponse,
+  PagedResult,
+  TokenDto,
+  HrDashboardDto,
+  ExpenseClaimDto,
+  ExpenseClaimListDto,
+  LeaveRequestDto,
+  LeaveCalendarDto,
+  TravelRequestDto,
+  TeamTravelScheduleDto,
+  DocumentDto,
+} from './types'
 
 const TOKEN_ACCESS = 'hrms_access_token'
 const TOKEN_REFRESH = 'hrms_refresh_token'
@@ -113,7 +134,7 @@ export function createDepartment(body: { name: string; code: string; description
 }
 
 export function getDepartment(id: string) {
-  return request<Record<string, unknown>>(`/api/v1/Departments/${id}`)
+  return request<DepartmentDto>(`/api/v1/Departments/${id}`)
 }
 
 export function updateDepartment(
@@ -143,7 +164,9 @@ export function deactivateDepartment(id: string) {
 }
 
 export function getDepartmentEmployees(id: string) {
-  return request<unknown[]>(`/api/v1/Departments/${id}/employees`)
+  return request<
+    { id: string; fullName: string; designation: string | null; profileImageUrl: string | null; isHead: boolean }[]
+  >(`/api/v1/Departments/${id}/employees`)
 }
 
 // --- Employees
@@ -199,34 +222,14 @@ export function uploadEmployeeImage(id: string, file: File) {
   return request<string>(`/api/v1/Employees/${id}/profile-image`, { method: 'POST', body: fd })
 }
 
-// --- Attendance
-
-export function checkIn(notes?: string | null) {
-  return request<string>('/api/v1/Attendance/check-in', { method: 'POST', body: JSON.stringify({ notes: notes ?? null }) })
-}
-
-export function checkOut(notes?: string | null) {
-  return request<unknown>('/api/v1/Attendance/check-out', { method: 'POST', body: JSON.stringify({ notes: notes ?? null }) })
-}
-
-export function getMyAttendance(start: string, end: string) {
-  return request<unknown[]>(`/api/v1/Attendance/my?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`)
-}
-
-export function getTodayAttendance() {
-  return request<unknown>('/api/v1/Attendance/today')
-}
+// --- Attendance (web admin — read-only listings; check-in/out reserved for mobile)
 
 export function getAttendanceRange(start: string, end: string) {
-  return request<unknown[]>(`/api/v1/Attendance/range?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`)
+  return request<AttendanceDto[]>(`/api/v1/Attendance/range?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`)
 }
 
 export function getTeamAttendance(date: string) {
-  return request<unknown[]>(`/api/v1/Attendance/team?date=${encodeURIComponent(date)}`)
-}
-
-export function getAttendanceSummary(start: string, end: string) {
-  return request<unknown>(`/api/v1/Attendance/summary?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`)
+  return request<AttendanceListDto[]>(`/api/v1/Attendance/team?date=${encodeURIComponent(date)}`)
 }
 
 export function updateAttendance(id: string, body: Record<string, unknown>) {
@@ -253,7 +256,7 @@ export function getLeaveBalances(year?: number) {
 }
 
 export function getPendingLeaves() {
-  return request<unknown[]>('/api/v1/Leaves/pending-approvals')
+  return request<LeaveRequestDto[]>('/api/v1/Leaves/pending-approvals')
 }
 
 export function approveLeave(id: string) {
@@ -272,7 +275,9 @@ export function cancelLeave(id: string) {
 }
 
 export function getTeamLeaveCalendar(start: string, end: string) {
-  return request<unknown[]>(`/api/v1/Leaves/team-calendar?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`)
+  return request<LeaveCalendarDto[]>(
+    `/api/v1/Leaves/team-calendar?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`,
+  )
 }
 
 // --- Expenses
@@ -290,11 +295,11 @@ export function getExpenseClaim(id: string) {
 }
 
 export function getPendingExpenseClaims() {
-  return request<unknown[]>('/api/v1/ExpenseClaims/pending-approvals')
+  return request<ExpenseClaimDto[]>('/api/v1/ExpenseClaims/pending-approvals')
 }
 
 export function getTeamExpenseClaims() {
-  return request<unknown[]>('/api/v1/ExpenseClaims/team')
+  return request<ExpenseClaimListDto[]>('/api/v1/ExpenseClaims/team')
 }
 
 export function getExpenseCategories() {
@@ -341,11 +346,13 @@ export function cancelTravel(id: string) {
 }
 
 export function getPendingTravel() {
-  return request<unknown[]>('/api/v1/TravelRequests/pending-approvals')
+  return request<TravelRequestDto[]>('/api/v1/TravelRequests/pending-approvals')
 }
 
 export function getTeamTravelSchedule(start: string, end: string) {
-  return request<unknown[]>(`/api/v1/TravelRequests/team-schedule?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`)
+  return request<TeamTravelScheduleDto[]>(
+    `/api/v1/TravelRequests/team-schedule?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`,
+  )
 }
 
 export function getTravelHistory() {
@@ -378,7 +385,7 @@ export function getEmployeeDocuments(employeeId: string) {
 }
 
 export function getCompanyDocuments() {
-  return request<unknown[]>('/api/v1/Documents/company')
+  return request<DocumentDto[]>('/api/v1/Documents/company')
 }
 
 export function updateDocument(id: string, body: { title: string; description?: string | null; category: string }) {
@@ -432,7 +439,7 @@ export function updateNotificationPreferences(body: Record<string, boolean>) {
 // --- Reports
 
 export function getHrDashboard() {
-  return request<unknown>('/api/v1/Reports/hr-dashboard')
+  return request<HrDashboardDto>('/api/v1/Reports/hr-dashboard')
 }
 
 export function getLeaveReport(start?: string | null, end?: string | null) {

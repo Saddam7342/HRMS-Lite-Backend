@@ -1,3 +1,4 @@
+using HRMS.Application.Common;
 using HRMS.Application.Common.Interfaces;
 using HRMS.Shared.Models;
 using MediatR;
@@ -20,8 +21,7 @@ public class UploadEmployeeProfileImageHandler(
 
         // Security: Self or Admin
         if (currentUserService.UserId != employee.UserId && 
-            !currentUserService.Roles.Contains("OrganizationAdmin") && 
-            !currentUserService.Roles.Contains("PlatformAdmin"))
+            !OrgRoles.IsCompanyAdmin(currentUserService.Roles))
         {
             return Result<string>.Failure("Unauthorized.");
         }

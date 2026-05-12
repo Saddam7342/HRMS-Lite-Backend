@@ -54,7 +54,7 @@ export function AppShell() {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-500 text-sm font-bold text-white">H</div>
           <div>
             <div className="text-sm font-semibold text-white">HRMS</div>
-            <div className="text-[11px] text-slate-500">Internal</div>
+            <div className="text-[11px] text-slate-500">Admin console</div>
           </div>
         </div>
         <nav className="space-y-0.5 p-3">

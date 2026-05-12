@@ -1,3 +1,4 @@
+using HRMS.Application.Common;
 using HRMS.Application.Common.Interfaces;
 using HRMS.Application.Features.Reports.DTOs;
 using HRMS.Domain.Enums;
@@ -16,13 +17,21 @@ public class GetHrDashboardSummaryHandler(
 {
     public async Task<Result<HrDashboardDto>> Handle(GetHrDashboardSummaryQuery request, CancellationToken cancellationToken)
     {
-        var isManager = currentUserService.Roles.Contains("Manager") && !currentUserService.Roles.Contains("OrganizationAdmin");
-        var managerId = currentUserService.UserId;
+        var isCompanyAdmin = OrgRoles.IsCompanyAdmin(currentUserService.Roles);
+        var isManagerScoped = currentUserService.Roles.Contains("Manager") && !isCompanyAdmin;
+        Guid? managerEmployeeId = null;
+        if (isManagerScoped && currentUserService.UserId.HasValue)
+        {
+            var me = await unitOfWork.Employees.GetByUserIdAsync(currentUserService.UserId.Value, cancellationToken);
+            managerEmployeeId = me?.Id;
+        }
+
         var startOfMonth = new DateTime(dateTimeProvider.UtcNow.Year, dateTimeProvider.UtcNow.Month, 1);
 
         // 1. Employee Stats
         var empQuery = unitOfWork.DbContext.Employees.AsNoTracking();
-        if (isManager) empQuery = empQuery.Where(x => x.ManagerId == managerId || x.Id == managerId);
+        if (isManagerScoped && managerEmployeeId.HasValue)
+            empQuery = empQuery.Where(x => x.ManagerId == managerEmployeeId || x.Id == managerEmployeeId);
 
         var totalEmployees = await empQuery.CountAsync(cancellationToken);
         var activeEmployees = await empQuery.CountAsync(x => x.Status == EmployeeStatus.Active, cancellationToken);
@@ -36,7 +45,8 @@ public class GetHrDashboardSummaryHandler(
 
         // 2. Leave Stats
         var leaveQuery = unitOfWork.DbContext.LeaveRequests.AsNoTracking();
-        if (isManager) leaveQuery = leaveQuery.Where(x => x.Employee.ManagerId == managerId);
+        if (isManagerScoped && managerEmployeeId.HasValue)
+            leaveQuery = leaveQuery.Where(x => x.Employee.ManagerId == managerEmployeeId);
 
         var totalLeaves = await leaveQuery.CountAsync(cancellationToken);
         var pendingLeaves = await leaveQuery.CountAsync(x => x.Status == LeaveRequestStatus.Pending, cancellationToken);
@@ -50,7 +60,8 @@ public class GetHrDashboardSummaryHandler(
 
         // 3. Expense Stats
         var expenseQuery = unitOfWork.DbContext.ExpenseClaims.AsNoTracking();
-        if (isManager) expenseQuery = expenseQuery.Where(x => x.Employee.ManagerId == managerId);
+        if (isManagerScoped && managerEmployeeId.HasValue)
+            expenseQuery = expenseQuery.Where(x => x.Employee.ManagerId == managerEmployeeId);
 
         var totalClaimed = await expenseQuery.SumAsync(x => x.Amount, cancellationToken);
         var approvedExpenses = await expenseQuery.Where(x => x.Status == ExpenseClaimStatus.Approved).SumAsync(x => x.Amount, cancellationToken);
@@ -63,7 +74,8 @@ public class GetHrDashboardSummaryHandler(
 
         // 4. Travel Stats
         var travelQuery = unitOfWork.DbContext.TravelRequests.AsNoTracking();
-        if (isManager) travelQuery = travelQuery.Where(x => x.Employee.ManagerId == managerId);
+        if (isManagerScoped && managerEmployeeId.HasValue)
+            travelQuery = travelQuery.Where(x => x.Employee.ManagerId == managerEmployeeId);
 
         var totalTravel = await travelQuery.CountAsync(cancellationToken);
         var approvedTravel = await travelQuery.CountAsync(x => x.Status == TravelRequestStatus.Approved, cancellationToken);
@@ -77,7 +89,8 @@ public class GetHrDashboardSummaryHandler(
 
         // 5. Attendance Stats
         var attendanceQuery = unitOfWork.DbContext.AttendanceRecords.AsNoTracking();
-        if (isManager) attendanceQuery = attendanceQuery.Where(x => x.Employee.ManagerId == managerId);
+        if (isManagerScoped && managerEmployeeId.HasValue)
+            attendanceQuery = attendanceQuery.Where(x => x.Employee.ManagerId == managerEmployeeId);
 
         var avgHours = await attendanceQuery.Where(x => x.TotalHours > 0).AverageAsync(x => (double?)x.TotalHours, cancellationToken) ?? 0;
         var lateCount = await attendanceQuery.CountAsync(x => x.IsLate, cancellationToken);

@@ -1,23 +1,24 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '../lib/api'
+import type { DocumentDto } from '../lib/types'
 import { Btn, Card, Input, PageTitle, Select, TextArea, Alert, Spinner } from '../components/Ui'
-import { apiErrorMessage } from '../lib/util'
+import { apiErrorMessage, formatDateTime } from '../lib/util'
 
 export default function DocumentsPage() {
-  const [company, setCompany] = useState<unknown[]>([])
+  const [company, setCompany] = useState<DocumentDto[]>([])
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [documentType, setDocumentType] = useState('1')
+  const [documentType, setDocumentType] = useState('2')
   const [category, setCategory] = useState('General')
   const [file, setFile] = useState<File | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
     const r = await api.getCompanyDocuments()
-    if (r.success && r.data) setCompany(r.data as unknown[])
+    if (r.success && r.data) setCompany(r.data)
     setLoading(false)
   }, [])
 
@@ -46,9 +47,25 @@ export default function DocumentsPage() {
     await load()
   }
 
+  async function downloadFile(doc: DocumentDto) {
+    const { access } = api.getStoredTokens()
+    const url = api.downloadDocumentUrl(doc.id)
+    const res = await fetch(url, { headers: access ? { Authorization: `Bearer ${access}` } : {} })
+    if (!res.ok) {
+      setMsg({ type: 'err', text: 'Download failed.' })
+      return
+    }
+    const blob = await res.blob()
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = doc.fileName || 'download'
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
+
   return (
     <div>
-      <PageTitle title="Documents" subtitle="Company library & uploads" />
+      <PageTitle title="Documents" subtitle="Company library and uploads" />
 
       {msg && (
         <div className="mb-4">
@@ -57,7 +74,7 @@ export default function DocumentsPage() {
       )}
 
       <Card className="mb-8">
-        <h3 className="mb-4 text-sm font-semibold">Upload</h3>
+        <h3 className="mb-4 text-sm font-semibold text-slate-800">Upload company document</h3>
         <form onSubmit={upload} className="grid gap-4 sm:grid-cols-2">
           <Input label="Title" value={title} onChange={(e) => setTitle(e.target.value)} required className="sm:col-span-2" />
           <div className="sm:col-span-2">
@@ -81,11 +98,47 @@ export default function DocumentsPage() {
       </Card>
 
       <Card>
-        <h3 className="mb-4 text-sm font-semibold">Company documents</h3>
+        <h3 className="mb-4 text-sm font-semibold text-slate-800">Company documents</h3>
         {loading ? (
           <Spinner />
         ) : (
-          <pre className="max-h-96 overflow-auto text-xs">{JSON.stringify(company, null, 2)}</pre>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-500">
+                  <th className="pb-3 font-medium">Title</th>
+                  <th className="pb-3 font-medium">Category</th>
+                  <th className="pb-3 font-medium">File</th>
+                  <th className="pb-3 font-medium">Uploaded by</th>
+                  <th className="pb-3 font-medium">When</th>
+                  <th className="pb-3 font-medium"> </th>
+                </tr>
+              </thead>
+              <tbody>
+                {company.map((doc) => (
+                  <tr key={doc.id} className="border-b border-slate-100">
+                    <td className="py-3 font-medium text-slate-900">{doc.title}</td>
+                    <td className="py-3">{doc.category}</td>
+                    <td className="max-w-[140px] truncate py-3 text-slate-600" title={doc.fileName}>
+                      {doc.fileName}
+                    </td>
+                    <td className="py-3">{doc.uploadedByName}</td>
+                    <td className="py-3 text-slate-600">{formatDateTime(doc.createdAt)}</td>
+                    <td className="py-3">
+                      <button
+                        type="button"
+                        className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                        onClick={() => void downloadFile(doc)}
+                      >
+                        Download
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {company.length === 0 && <p className="mt-4 text-sm text-slate-500">No documents yet.</p>}
+          </div>
         )}
       </Card>
     </div>

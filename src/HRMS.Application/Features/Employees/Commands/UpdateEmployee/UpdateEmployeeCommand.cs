@@ -1,4 +1,5 @@
 using FluentValidation;
+using HRMS.Application.Common;
 using HRMS.Application.Common.Interfaces;
 using HRMS.Domain.Enums;
 using HRMS.Shared.Models;
@@ -43,7 +44,7 @@ public class UpdateEmployeeHandler(
 
         // Security Check: Only OrgAdmin can edit other employees. 
         // Employees can only edit their own profile (and maybe even then, restricted).
-        var isAdmin = currentUserService.Roles.Contains("PlatformAdmin") || currentUserService.Roles.Contains("OrganizationAdmin");
+        var isAdmin = OrgRoles.IsCompanyAdmin(currentUserService.Roles);
         var isSelf = currentUserService.UserId == employee.UserId;
 
         if (!isAdmin && !isSelf)

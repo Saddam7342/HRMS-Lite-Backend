@@ -1,64 +1,44 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '../lib/api'
-import { Btn, Card, Input, PageTitle, Select, TextArea, Alert, Spinner } from '../components/Ui'
-import { apiErrorMessage, todayISODate } from '../lib/util'
+import type { ExpenseClaimDto, ExpenseClaimListDto } from '../lib/types'
+import { Btn, Card, PageTitle, Alert, Spinner } from '../components/Ui'
+import { apiErrorMessage, formatDate, formatDateTime, money } from '../lib/util'
 import { hasRole, useAuth } from '../context/AuthContext'
-
-type Cat = { id: string; name: string }
 
 export default function ExpensesPage() {
   const { roles } = useAuth()
-  const manager = hasRole(roles, 'Admin') || hasRole(roles, 'Manager')
-  const [cats, setCats] = useState<Cat[]>([])
-  const [mine, setMine] = useState<unknown[]>([])
-  const [pending, setPending] = useState<Array<{ id: string }>>([])
+  const approver = hasRole(roles, 'Admin') || hasRole(roles, 'Manager')
+
+  const [pending, setPending] = useState<ExpenseClaimDto[]>([])
+  const [team, setTeam] = useState<ExpenseClaimListDto[]>([])
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
-  const [categoryId, setCategoryId] = useState('')
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [amount, setAmount] = useState('0')
-  const [expenseDate, setExpenseDate] = useState(todayISODate())
-
   const load = useCallback(async () => {
     setLoading(true)
-    const [c, m, p] = await Promise.all([
-      api.getExpenseCategories(),
-      api.getMyExpenseClaims(),
-      manager ? api.getPendingExpenseClaims() : Promise.resolve({ success: true, data: [] } as const),
-    ])
-    if (c.success && c.data) {
-      const raw = c.data as Record<string, unknown>[]
-      setCats(
-        raw.map((x) => ({
-          id: String(x.id ?? x.Id),
-          name: String(x.name ?? x.Name ?? ''),
-        })),
+    const jobs: Promise<void>[] = []
+    if (approver) {
+      jobs.push(
+        api.getPendingExpenseClaims().then((r) => {
+          if (r.success && r.data) setPending(r.data)
+        }),
       )
+      jobs.push(
+        api.getTeamExpenseClaims().then((r) => {
+          if (r.success && r.data) setTeam(r.data)
+        }),
+      )
+    } else {
+      setPending([])
+      setTeam([])
     }
-    if (m.success && m.data) setMine(m.data as unknown[])
-    if (p.success && p.data) setPending(p.data as { id: string }[])
+    await Promise.all(jobs)
     setLoading(false)
-  }, [manager])
+  }, [approver])
 
   useEffect(() => {
     void load()
   }, [load])
-
-  async function createClaim(e: React.FormEvent) {
-    e.preventDefault()
-    setMsg(null)
-    const r = await api.createExpenseClaim({
-      categoryId,
-      title,
-      description: description || null,
-      amount: Number(amount),
-      expenseDate: `${expenseDate}T12:00:00Z`,
-    })
-    setMsg(r.success ? { type: 'ok', text: 'Claim created.' } : { type: 'err', text: apiErrorMessage(r) })
-    await load()
-  }
 
   async function approve(id: string) {
     const r = await api.approveExpense(id)
@@ -67,7 +47,7 @@ export default function ExpensesPage() {
   }
 
   async function reject(id: string) {
-    const reason = prompt('Reason?') ?? ''
+    const reason = window.prompt('Reason for rejection?') ?? ''
     const r = await api.rejectExpense(id, reason || null)
     setMsg(r.success ? { type: 'ok', text: 'Rejected.' } : { type: 'err', text: apiErrorMessage(r) })
     await load()
@@ -75,68 +55,99 @@ export default function ExpensesPage() {
 
   return (
     <div>
-      <PageTitle title="Expense claims" subtitle="Submit and review reimbursements" />
+      <PageTitle
+        title="Expense claims"
+        subtitle="Review pending claims and team submissions (submission happens on mobile)."
+      />
       {msg && (
         <div className="mb-4">
           <Alert type={msg.type === 'ok' ? 'ok' : 'err'}>{msg.text}</Alert>
         </div>
       )}
 
-      <Card className="mb-8">
-        <h3 className="mb-4 text-sm font-semibold">New claim</h3>
-        {loading ? (
-          <Spinner />
-        ) : (
-          <form onSubmit={createClaim} className="grid gap-4 sm:grid-cols-2">
-            <Select label="Category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
-              <option value="">Select…</option>
-              {cats.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </Select>
-            <Input label="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
-            <Input
-              label="Amount"
-              type="number"
-              step="0.01"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              required
-            />
-            <Input type="date" label="Expense date" value={expenseDate} onChange={(e) => setExpenseDate(e.target.value)} />
-            <div className="sm:col-span-2">
-              <TextArea label="Description" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
-            </div>
-            <Btn type="submit">Submit</Btn>
-          </form>
-        )}
-      </Card>
+      {!approver && <Alert type="info">Expense approvals are available to Admin and Manager roles.</Alert>}
 
-      <Card className="mb-8">
-        <h3 className="mb-4 text-sm font-semibold">My claims</h3>
-        <pre className="max-h-64 overflow-auto text-xs">{JSON.stringify(mine, null, 2)}</pre>
-      </Card>
-
-      {manager && (
-        <Card>
-          <h3 className="mb-4 text-sm font-semibold">Pending approvals</h3>
-          <div className="space-y-3">
-            {pending.map((row) => (
-              <div key={row.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-slate-50 px-4 py-2">
-                <code className="text-xs">{row.id}</code>
-                <div className="flex gap-2">
-                  <Btn onClick={() => void approve(row.id)}>Approve</Btn>
-                  <Btn variant="danger" onClick={() => void reject(row.id)}>
-                    Reject
-                  </Btn>
-                </div>
+      {approver && (
+        <>
+          <Card className="mb-8">
+            <h3 className="mb-4 text-sm font-semibold text-slate-800">Pending approvals</h3>
+            {loading ? (
+              <Spinner />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-slate-500">
+                      <th className="pb-3 font-medium">Employee</th>
+                      <th className="pb-3 font-medium">Title</th>
+                      <th className="pb-3 font-medium">Category</th>
+                      <th className="pb-3 font-medium">Amount</th>
+                      <th className="pb-3 font-medium">Expense date</th>
+                      <th className="pb-3 font-medium">Submitted</th>
+                      <th className="pb-3 font-medium text-right"> </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pending.map((row) => (
+                      <tr key={row.id} className="border-b border-slate-100">
+                        <td className="py-3 font-medium text-slate-900">{row.employeeName}</td>
+                        <td className="py-3">{row.title}</td>
+                        <td className="py-3">{row.categoryName}</td>
+                        <td className="py-3">{money(row.amount)}</td>
+                        <td className="py-3 text-slate-600">{formatDate(row.expenseDate)}</td>
+                        <td className="py-3 text-slate-600">{formatDateTime(row.submittedAt)}</td>
+                        <td className="py-3 text-right">
+                          <div className="flex justify-end gap-2">
+                            <Btn onClick={() => void approve(row.id)}>Approve</Btn>
+                            <Btn variant="danger" onClick={() => void reject(row.id)}>
+                              Reject
+                            </Btn>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {pending.length === 0 && <p className="mt-4 text-sm text-slate-500">No pending claims.</p>}
               </div>
-            ))}
-            {!pending.length && <p className="text-sm text-slate-500">None pending.</p>}
-          </div>
-        </Card>
+            )}
+          </Card>
+
+          <Card>
+            <h3 className="mb-4 text-sm font-semibold text-slate-800">Team expense claims</h3>
+            {loading ? (
+              <Spinner />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-slate-500">
+                      <th className="pb-3 font-medium">Employee</th>
+                      <th className="pb-3 font-medium">Title</th>
+                      <th className="pb-3 font-medium">Category</th>
+                      <th className="pb-3 font-medium">Amount</th>
+                      <th className="pb-3 font-medium">Date</th>
+                      <th className="pb-3 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {team.map((row) => (
+                      <tr key={row.id} className="border-b border-slate-100">
+                        <td className="py-3 font-medium">{row.employeeName}</td>
+                        <td className="py-3">{row.title}</td>
+                        <td className="py-3">{row.categoryName}</td>
+                        <td className="py-3">{money(row.amount)}</td>
+                        <td className="py-3">{formatDate(row.expenseDate)}</td>
+                        <td className="py-3">{row.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {team.length === 0 && <p className="mt-4 text-sm text-slate-500">No team claims found.</p>}
+              </div>
+            )}
+          </Card>
+        </>
       )}
     </div>
   )
