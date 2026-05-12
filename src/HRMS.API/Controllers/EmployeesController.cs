@@ -33,7 +33,7 @@ public class EmployeesController : BaseApiController
     public async Task<IActionResult> GetAll([FromQuery] PaginationParams paginationParams)
     {
         var result = await Mediator.Send(new GetEmployeesQuery(paginationParams));
-        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     /// <summary>
@@ -107,7 +107,7 @@ public class EmployeesController : BaseApiController
         if (!me.IsSuccess) return BadRequest(ApiResponse.Fail(me.Errors));
         
         var result = await Mediator.Send(new GetTeamMembersQuery(me.Data!.Id));
-        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     /// <summary>

@@ -14,7 +14,7 @@ public class NotificationsController : BaseApiController
     public async Task<IActionResult> GetMyNotifications([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var result = await Mediator.Send(new GetMyNotificationsQuery(page, pageSize));
-        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpGet("count")]
@@ -22,7 +22,7 @@ public class NotificationsController : BaseApiController
     public async Task<IActionResult> GetUnreadCount()
     {
         var result = await Mediator.Send(new GetNotificationCountQuery());
-        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpPut("{id}/read")]
@@ -54,7 +54,7 @@ public class NotificationsController : BaseApiController
     public async Task<IActionResult> GetPreferences()
     {
         var result = await Mediator.Send(new GetNotificationPreferencesQuery());
-        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpPut("preferences")]

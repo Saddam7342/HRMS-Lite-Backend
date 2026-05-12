@@ -24,7 +24,7 @@ public class LeavesController : BaseApiController
     public async Task<IActionResult> GetMyLeaves()
     {
         var result = await Mediator.Send(new GetMyLeaveRequestsQuery());
-        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpGet("balances")]
@@ -32,7 +32,7 @@ public class LeavesController : BaseApiController
     public async Task<IActionResult> GetBalances(int? year)
     {
         var result = await Mediator.Send(new GetLeaveBalancesQuery(year));
-        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpGet("pending-approvals")]
@@ -40,7 +40,7 @@ public class LeavesController : BaseApiController
     public async Task<IActionResult> GetPendingApprovals()
     {
         var result = await Mediator.Send(new GetPendingLeaveApprovalsQuery());
-        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpPut("{id}/approve")]
@@ -72,6 +72,6 @@ public class LeavesController : BaseApiController
     public async Task<IActionResult> GetTeamCalendar(DateTime start, DateTime end)
     {
         var result = await Mediator.Send(new GetTeamLeaveCalendarQuery(start, end));
-        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 }

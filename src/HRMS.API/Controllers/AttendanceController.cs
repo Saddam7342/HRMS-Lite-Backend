@@ -32,7 +32,7 @@ public class AttendanceController : BaseApiController
     public async Task<IActionResult> GetMyAttendance(DateTime start, DateTime end)
     {
         var result = await Mediator.Send(new GetMyAttendanceQuery(start, end));
-        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpGet("today")]
@@ -48,7 +48,7 @@ public class AttendanceController : BaseApiController
     public async Task<IActionResult> GetRange(DateTime start, DateTime end)
     {
         var result = await Mediator.Send(new GetAttendanceByDateRangeQuery(start, end));
-        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpGet("team")]
@@ -56,7 +56,7 @@ public class AttendanceController : BaseApiController
     public async Task<IActionResult> GetTeam(DateTime date)
     {
         var result = await Mediator.Send(new GetTeamAttendanceQuery(date));
-        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpPut("{id}")]
@@ -81,6 +81,6 @@ public class AttendanceController : BaseApiController
     public async Task<IActionResult> GetSummary(DateTime start, DateTime end)
     {
         var result = await Mediator.Send(new GetAttendanceSummaryQuery(start, end));
-        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 }

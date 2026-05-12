@@ -32,7 +32,7 @@ public class DepartmentsController : BaseApiController
     public async Task<IActionResult> GetAll()
     {
         var result = await Mediator.Send(new GetDepartmentsQuery());
-        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     /// <summary>
@@ -44,7 +44,7 @@ public class DepartmentsController : BaseApiController
     public async Task<IActionResult> GetHierarchy()
     {
         var result = await Mediator.Send(new GetDepartmentHierarchyQuery());
-        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
+        return result.IsSuccess ? Ok(ApiResponse.OkData(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     /// <summary>
