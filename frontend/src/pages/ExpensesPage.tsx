@@ -96,51 +96,85 @@ export default function ExpensesPage() {
         <>
           {tab === 'pending' && (
             <Card className="mb-8">
-            <h3 className="mb-4 text-sm font-semibold text-slate-800">Pending approvals</h3>
-            {loading ? (
-              <Spinner />
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-200 text-slate-500">
-                      <th className="pb-3 font-medium">Employee</th>
-                      <th className="pb-3 font-medium">Title</th>
-                      <th className="pb-3 font-medium">Category</th>
-                      <th className="pb-3 font-medium">Amount</th>
-                      <th className="pb-3 font-medium">Expense date</th>
-                      <th className="pb-3 font-medium">Submitted</th>
-                      <th className="pb-3 font-medium text-right"> </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pending.map((row) => (
-                      <tr key={row.id} className="border-b border-slate-100">
-                        <td className="py-3 font-medium text-slate-900">{row.employeeName}</td>
-                        <td className="py-3">{row.title}</td>
-                        <td className="py-3">{row.categoryName}</td>
-                        <td className="py-3">{money(row.amount)}</td>
-                        <td className="py-3 text-slate-600">{formatDate(row.expenseDate)}</td>
-                        <td className="py-3 text-slate-600">{formatDateTime(row.submittedAt)}</td>
-                        <td className="py-3 text-right">
-                          <div className="flex justify-end gap-2">
-                            <Btn onClick={() => void approve(row.id)}>Approve</Btn>
-                            <Btn variant="danger" onClick={() => void reject(row.id)}>
-                              Reject
-                            </Btn>
-                          </div>
-                        </td>
+              <h3 className="mb-4 text-sm font-semibold text-slate-800">Pending approvals</h3>
+              {loading ? (
+                <Spinner />
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-200 text-slate-500">
+                        <th className="pb-3 font-medium">Employee</th>
+                        <th className="pb-3 font-medium">Title</th>
+                        <th className="pb-3 font-medium">Category</th>
+                        <th className="pb-3 font-medium">Amount</th>
+                        <th className="pb-3 font-medium">Expense date</th>
+                        <th className="pb-3 font-medium">Submitted</th>
+                        <th className="pb-3 font-medium text-right"> </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {pending.length === 0 && <p className="mt-4 text-sm text-slate-500">No pending claims.</p>}
-              </div>
-            )}
-          </Card>
+                    </thead>
+                    <tbody>
+                      {pending.map((row) => (
+                        <tr key={row.id} className="border-b border-slate-100">
+                          <td className="py-3 font-medium text-slate-900">{row.employeeName}</td>
+                          <td className="py-3">{row.title}</td>
+                          <td className="py-3">{row.categoryName}</td>
+                          <td className="py-3">{money(row.amount)}</td>
+                          <td className="py-3 text-slate-600">{formatDate(row.expenseDate)}</td>
+                          <td className="py-3 text-slate-600">{formatDateTime(row.submittedAt)}</td>
+                          <td className="py-3 text-right">
+                            <div className="flex justify-end gap-2">
+                              <Btn onClick={() => void approve(row.id)}>Approve</Btn>
+                              <Btn variant="danger" onClick={() => void reject(row.id)}>
+                                Reject
+                              </Btn>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {pending.length === 0 && <p className="mt-4 text-sm text-slate-500">No pending claims.</p>}
+                </div>
+              )}
+            </Card>
+          )}
 
-            </div>
-          </Card>
+          {tab === 'team' && (
+            <Card>
+              <h3 className="mb-4 text-sm font-semibold text-slate-800">Team expense claims</h3>
+              {loading ? (
+                <Spinner />
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-200 text-slate-500">
+                        <th className="pb-3 font-medium">Employee</th>
+                        <th className="pb-3 font-medium">Title</th>
+                        <th className="pb-3 font-medium">Category</th>
+                        <th className="pb-3 font-medium">Amount</th>
+                        <th className="pb-3 font-medium">Date</th>
+                        <th className="pb-3 font-medium">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {team.map((row) => (
+                        <tr key={row.id} className="border-b border-slate-100">
+                          <td className="py-3 font-medium">{row.employeeName}</td>
+                          <td className="py-3">{row.title}</td>
+                          <td className="py-3">{row.categoryName}</td>
+                          <td className="py-3">{money(row.amount)}</td>
+                          <td className="py-3">{formatDate(row.expenseDate)}</td>
+                          <td className="py-3">{row.status}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {team.length === 0 && <p className="mt-4 text-sm text-slate-500">No team claims found.</p>}
+                </div>
+              )}
+            </Card>
           )}
 
           {tab === 'org' && hasRole(roles, 'Admin') && (

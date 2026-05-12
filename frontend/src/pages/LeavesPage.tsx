@@ -99,10 +99,60 @@ export default function LeavesPage() {
         <>
           {tab === 'pending' && (
             <Card className="mb-8">
-            <h3 className="mb-4 text-sm font-semibold text-slate-800">Pending approvals</h3>
-            {loading ? (
-              <Spinner />
-            ) : (
+              <h3 className="mb-4 text-sm font-semibold text-slate-800">Pending approvals</h3>
+              {loading ? (
+                <Spinner />
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-200 text-slate-500">
+                        <th className="pb-3 font-medium">Employee</th>
+                        <th className="pb-3 font-medium">Type</th>
+                        <th className="pb-3 font-medium">Start</th>
+                        <th className="pb-3 font-medium">End</th>
+                        <th className="pb-3 font-medium">Days</th>
+                        <th className="pb-3 font-medium">Reason</th>
+                        <th className="pb-3 font-medium text-right"> </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pending.map((row) => (
+                        <tr key={row.id} className="border-b border-slate-100">
+                          <td className="py-3 font-medium text-slate-900">{row.employeeName}</td>
+                          <td className="py-3">{row.leaveTypeName}</td>
+                          <td className="py-3 text-slate-600">{formatDate(row.startDate)}</td>
+                          <td className="py-3 text-slate-600">{formatDate(row.endDate)}</td>
+                          <td className="py-3">{row.totalDays}</td>
+                          <td className="max-w-xs truncate py-3 text-slate-600" title={row.reason ?? ''}>
+                            {row.reason ?? '—'}
+                          </td>
+                          <td className="py-3 text-right">
+                            <div className="flex justify-end gap-2">
+                              <Btn onClick={() => void approve(row.id)}>Approve</Btn>
+                              <Btn variant="danger" onClick={() => void reject(row.id)}>
+                                Reject
+                              </Btn>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {pending.length === 0 && <p className="mt-4 text-sm text-slate-500">No pending requests.</p>}
+                </div>
+              )}
+            </Card>
+          )}
+
+          {tab === 'calendar' && (
+            <Card>
+              <h3 className="mb-4 text-sm font-semibold text-slate-800">Team leave calendar</h3>
+              <div className="mb-4 flex flex-wrap items-end gap-4">
+                <Input type="date" label="From" value={calStart} onChange={(e) => setCalStart(e.target.value)} />
+                <Input type="date" label="To" value={calEnd} onChange={(e) => setCalEnd(e.target.value)} />
+                <Btn onClick={() => void reloadCalendar()}>Load</Btn>
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
@@ -111,41 +161,26 @@ export default function LeavesPage() {
                       <th className="pb-3 font-medium">Type</th>
                       <th className="pb-3 font-medium">Start</th>
                       <th className="pb-3 font-medium">End</th>
-                      <th className="pb-3 font-medium">Days</th>
-                      <th className="pb-3 font-medium">Reason</th>
-                      <th className="pb-3 font-medium text-right"> </th>
+                      <th className="pb-3 font-medium">Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {pending.map((row) => (
+                    {calendar.map((row) => (
                       <tr key={row.id} className="border-b border-slate-100">
-                        <td className="py-3 font-medium text-slate-900">{row.employeeName}</td>
+                        <td className="py-3 font-medium">{row.employeeName}</td>
                         <td className="py-3">{row.leaveTypeName}</td>
-                        <td className="py-3 text-slate-600">{formatDate(row.startDate)}</td>
-                        <td className="py-3 text-slate-600">{formatDate(row.endDate)}</td>
-                        <td className="py-3">{row.totalDays}</td>
-                        <td className="max-w-xs truncate py-3 text-slate-600" title={row.reason ?? ''}>
-                          {row.reason ?? '—'}
-                        </td>
-                        <td className="py-3 text-right">
-                          <div className="flex justify-end gap-2">
-                            <Btn onClick={() => void approve(row.id)}>Approve</Btn>
-                            <Btn variant="danger" onClick={() => void reject(row.id)}>
-                              Reject
-                            </Btn>
-                          </div>
-                        </td>
+                        <td className="py-3">{formatDate(row.startDate)}</td>
+                        <td className="py-3">{formatDate(row.endDate)}</td>
+                        <td className="py-3">{row.status}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-                {pending.length === 0 && <p className="mt-4 text-sm text-slate-500">No pending requests.</p>}
+                {calendar.length === 0 && !loading && (
+                  <p className="mt-4 text-sm text-slate-500">No entries in this range.</p>
+                )}
               </div>
-            )}
-          </Card>
-
-            </div>
-          </Card>
+            </Card>
           )}
 
           {tab === 'org' && hasRole(roles, 'Admin') && (

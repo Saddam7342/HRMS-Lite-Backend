@@ -51,15 +51,22 @@ export function clearTokens() {
 async function tryRefresh(): Promise<boolean> {
   const { access, refresh } = getStoredTokens()
   if (!access || !refresh) return false
-  const res = await fetch(apiPath('/api/v1/Auth/refresh'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ accessToken: access, refreshToken: refresh }),
-  })
-  const j = (await res.json()) as ApiResponse<TokenDto>
-  if (!j.success || !j.data) return false
-  setTokens(j.data.accessToken, j.data.refreshToken)
-  return true
+  try {
+    const res = await fetch(apiPath('/api/v1/Auth/refresh'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessToken: access, refreshToken: refresh }),
+    })
+    if (!res.ok) return false
+    const text = await res.text()
+    if (!text) return false
+    const j = JSON.parse(text) as ApiResponse<TokenDto>
+    if (!j.success || !j.data) return false
+    setTokens(j.data.accessToken, j.data.refreshToken)
+    return true
+  } catch {
+    return false
+  }
 }
 
 type Opt = RequestInit & { skipAuth?: boolean; raw?: boolean }
@@ -85,10 +92,23 @@ export async function request<T>(path: string, init?: Opt): Promise<ApiResponse<
     res = await fetch(apiPath(path), { ...init, headers })
   }
 
-  if (init?.raw) return ({ success: res.ok } as unknown) as ApiResponse<T>
+  if (init?.raw) return { success: res.ok } as unknown as ApiResponse<T>
 
-  const json = (await res.json()) as ApiResponse<T>
-  return json
+  const text = await res.text()
+  if (!text) {
+    return { success: res.ok, message: res.statusText } as ApiResponse<T>
+  }
+
+  try {
+    const json = JSON.parse(text)
+    // Handle potential casing differences from backend
+    if (json.Success !== undefined && json.success === undefined) {
+      json.success = json.Success
+    }
+    return json as ApiResponse<T>
+  } catch {
+    return { success: false, message: 'Invalid server response' } as ApiResponse<T>
+  }
 }
 
 // --- Auth

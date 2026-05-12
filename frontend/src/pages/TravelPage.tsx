@@ -92,10 +92,61 @@ export default function TravelPage() {
         <>
           {tab === 'pending' && (
             <Card className="mb-8">
-            <h3 className="mb-4 text-sm font-semibold text-slate-800">Pending approvals</h3>
-            {loading ? (
-              <Spinner />
-            ) : (
+              <h3 className="mb-4 text-sm font-semibold text-slate-800">Pending approvals</h3>
+              {loading ? (
+                <Spinner />
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-200 text-slate-500">
+                        <th className="pb-3 font-medium">Employee</th>
+                        <th className="pb-3 font-medium">Destination</th>
+                        <th className="pb-3 font-medium">From</th>
+                        <th className="pb-3 font-medium">To</th>
+                        <th className="pb-3 font-medium">Budget</th>
+                        <th className="pb-3 font-medium">Purpose</th>
+                        <th className="pb-3 font-medium text-right"> </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pending.map((row) => (
+                        <tr key={row.id} className="border-b border-slate-100">
+                          <td className="py-3 font-medium text-slate-900">{row.employeeName}</td>
+                          <td className="py-3">{row.destination}</td>
+                          <td className="py-3 text-slate-600">{formatDate(row.fromDate)}</td>
+                          <td className="py-3 text-slate-600">{formatDate(row.toDate)}</td>
+                          <td className="py-3">{row.estimatedBudget != null ? money(row.estimatedBudget) : '—'}</td>
+                          <td className="max-w-xs truncate py-3 text-slate-600" title={row.purpose}>
+                            {row.purpose}
+                          </td>
+                          <td className="py-3 text-right">
+                            <div className="flex justify-end gap-2">
+                              <Btn onClick={() => void approve(row.id)}>Approve</Btn>
+                              <Btn variant="danger" onClick={() => void reject(row.id)}>
+                                Reject
+                              </Btn>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {pending.length === 0 && <p className="mt-4 text-sm text-slate-500">No pending requests.</p>}
+                </div>
+              )}
+            </Card>
+          )}
+
+          {tab === 'schedule' && (
+            <Card>
+              <h3 className="mb-4 text-sm font-semibold text-slate-800">Team travel schedule</h3>
+              <div className="mb-4 flex flex-wrap items-end gap-4">
+                <span className="text-xs text-slate-500">Range:</span>
+                <Input type="date" label="From" value={schedStart} onChange={(e) => setSchedStart(e.target.value)} />
+                <Input type="date" label="To" value={schedEnd} onChange={(e) => setSchedEnd(e.target.value)} />
+                <Btn onClick={() => void loadSchedule()}>Load</Btn>
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
@@ -104,41 +155,26 @@ export default function TravelPage() {
                       <th className="pb-3 font-medium">Destination</th>
                       <th className="pb-3 font-medium">From</th>
                       <th className="pb-3 font-medium">To</th>
-                      <th className="pb-3 font-medium">Budget</th>
-                      <th className="pb-3 font-medium">Purpose</th>
-                      <th className="pb-3 font-medium text-right"> </th>
+                      <th className="pb-3 font-medium">Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {pending.map((row) => (
+                    {schedule.map((row) => (
                       <tr key={row.id} className="border-b border-slate-100">
-                        <td className="py-3 font-medium text-slate-900">{row.employeeName}</td>
+                        <td className="py-3 font-medium">{row.employeeName}</td>
                         <td className="py-3">{row.destination}</td>
-                        <td className="py-3 text-slate-600">{formatDate(row.fromDate)}</td>
-                        <td className="py-3 text-slate-600">{formatDate(row.toDate)}</td>
-                        <td className="py-3">{row.estimatedBudget != null ? money(row.estimatedBudget) : '—'}</td>
-                        <td className="max-w-xs truncate py-3 text-slate-600" title={row.purpose}>
-                          {row.purpose}
-                        </td>
-                        <td className="py-3 text-right">
-                          <div className="flex justify-end gap-2">
-                            <Btn onClick={() => void approve(row.id)}>Approve</Btn>
-                            <Btn variant="danger" onClick={() => void reject(row.id)}>
-                              Reject
-                            </Btn>
-                          </div>
-                        </td>
+                        <td className="py-3">{formatDate(row.fromDate)}</td>
+                        <td className="py-3">{formatDate(row.toDate)}</td>
+                        <td className="py-3">{row.status}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-                {pending.length === 0 && <p className="mt-4 text-sm text-slate-500">No pending requests.</p>}
+                {schedule.length === 0 && !loading && (
+                  <p className="mt-4 text-sm text-slate-500">No travel in this range.</p>
+                )}
               </div>
-            )}
-          </Card>
-
-            </div>
-          </Card>
+            </Card>
           )}
 
           {tab === 'org' && hasRole(roles, 'Admin') && (
