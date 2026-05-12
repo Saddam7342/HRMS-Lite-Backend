@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.API.Controllers.Platform;
 
+[ApiVersion("1.0")]
+[Tags("Platform Management")]
 [Authorize(Roles = "PlatformAdmin")]
 public class PlatformOrganizationsController : BaseApiController
 {

@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.API.Controllers;
 
+[ApiVersion("1.0")]
 public class AuthController : BaseApiController
 {
     /// <summary>
