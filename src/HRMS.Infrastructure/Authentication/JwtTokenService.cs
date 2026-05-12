@@ -42,7 +42,10 @@ public class JwtTokenService(IOptions<JwtSettings> jwtSettings) : IJwtTokenServi
             }
         }
 
-        var secret = _jwtSettings.Secret ?? "TemporarySecureKeyForDevelopmentOnly_ReplaceInProduction";
+        var secret = !string.IsNullOrWhiteSpace(_jwtSettings.Secret) 
+            ? _jwtSettings.Secret 
+            : "SuperSecretDefaultKeyForDevelopment_AtLeast32CharsLong!";
+        
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var expires = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryMinutes);
