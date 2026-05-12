@@ -1,10 +1,12 @@
 using HRMS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace HRMS.Application.Common.Interfaces;
 
 public interface IApplicationDbContext
 {
+    DatabaseFacade Database { get; }
     DbSet<Organization> Organizations { get; }
     DbSet<AppUser> Users { get; }
     DbSet<Role> Roles { get; }
