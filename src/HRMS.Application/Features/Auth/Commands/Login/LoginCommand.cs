@@ -24,7 +24,8 @@ public class LoginHandler(
     IJwtTokenService jwtTokenService,
     IPasswordHasher passwordHasher,
     IDateTimeProvider dateTimeProvider,
-    IAuditService auditService) : IRequestHandler<LoginCommand, Result<LoginResponse>>
+    IAuditService auditService,
+    ITenantContext tenantContext) : IRequestHandler<LoginCommand, Result<LoginResponse>>
 {
     public async Task<Result<LoginResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
@@ -93,6 +94,9 @@ public class LoginHandler(
                 new { user.Email, user.LastLoginAt }, 
                 user.OrganizationId,
                 cancellationToken);
+
+            // Explicitly set tenant context so the update filter matches the user's record
+            tenantContext.SetTenant(user.OrganizationId);
 
             await unitOfWork.CommitAsync(cancellationToken);
 
