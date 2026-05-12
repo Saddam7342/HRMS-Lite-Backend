@@ -91,16 +91,20 @@ var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        var secret = !string.IsNullOrWhiteSpace(jwtSettings?.Secret)
+            ? jwtSettings.Secret
+            : "SuperSecretDefaultKeyForDevelopment_AtLeast32CharsLong!";
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings?.Issuer,
-            ValidAudience = jwtSettings?.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtSettings?.Secret ?? ""))
+            ValidIssuer = !string.IsNullOrWhiteSpace(jwtSettings?.Issuer) ? jwtSettings.Issuer : "HRMS",
+            ValidAudience = !string.IsNullOrWhiteSpace(jwtSettings?.Audience) ? jwtSettings.Audience : "HRMS-Clients",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
+            ClockSkew = TimeSpan.Zero
         };
     });
 

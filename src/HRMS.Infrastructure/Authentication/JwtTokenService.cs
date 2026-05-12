@@ -52,9 +52,12 @@ public class JwtTokenService(IOptions<JwtSettings> jwtSettings) : IJwtTokenServi
         var key   = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+        var issuer = !string.IsNullOrWhiteSpace(_jwtSettings.Issuer) ? _jwtSettings.Issuer : "HRMS";
+        var audience = !string.IsNullOrWhiteSpace(_jwtSettings.Audience) ? _jwtSettings.Audience : "HRMS-Clients";
+
         var token = new JwtSecurityToken(
-            _jwtSettings.Issuer,
-            _jwtSettings.Audience,
+            issuer,
+            audience,
             claims,
             expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryMinutes),
             signingCredentials: creds
