@@ -48,6 +48,9 @@ public class ApiResponse
     public static ApiResponse Ok(string? message = null, string? traceId = null) =>
         new() { Success = true, Message = message, TraceId = traceId ?? string.Empty };
 
+    public static ApiResponse<T> Ok<T>(T data, string? message = null, string? traceId = null) =>
+        ApiResponse<T>.Ok(data, message, traceId);
+
     public static ApiResponse Fail(List<string> errors, string? message = null, string? traceId = null) =>
         new() { Success = false, Errors = errors, Message = message, TraceId = traceId ?? string.Empty };
 

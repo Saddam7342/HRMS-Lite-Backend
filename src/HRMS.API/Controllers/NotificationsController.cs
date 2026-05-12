@@ -22,7 +22,7 @@ public class NotificationsController : BaseApiController
     public async Task<IActionResult> GetUnreadCount()
     {
         var result = await Mediator.Send(new GetNotificationCountQuery());
-        return Ok(ApiResponse<int>.Ok(result.Data));
+        return result.IsSuccess ? Ok(ApiResponse.Ok(result.Data!)) : BadRequest(ApiResponse.Fail(result.Errors));
     }
 
     [HttpPut("{id}/read")]
