@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import * as api from '../lib/api'
 import type { DepartmentListDto, EmployeeListDto } from '../lib/types'
-import { Btn, Card, Input, PageTitle, Select, Alert, Spinner } from '../components/Ui'
+import { Btn, Card, Input, PageTitle, Select, Alert, TableSkeleton } from '../components/Ui'
 import { apiErrorMessage } from '../lib/util'
 import { hasRole, useAuth } from '../context/AuthContext'
 
@@ -150,7 +150,7 @@ export default function EmployeesPage() {
           </Btn>
         </div>
         {loading ? (
-          <Spinner />
+          <TableSkeleton rows={8} columns={canManage ? 6 : 5} />
         ) : (
           <>
             <div className="overflow-x-auto">

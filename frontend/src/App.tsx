@@ -12,9 +12,6 @@ import ExpensesPage from './pages/ExpensesPage'
 import TravelPage from './pages/TravelPage'
 import DocumentsPage from './pages/DocumentsPage'
 import NotificationsPage from './pages/NotificationsPage'
-import ReportsPage from './pages/ReportsPage'
-import AuditPage from './pages/AuditPage'
-import SystemPage from './pages/SystemPage'
 import ProfilePage from './pages/ProfilePage'
 import EmployeeDetailPage from './pages/EmployeeDetailPage'
 
@@ -56,9 +53,6 @@ export default function App() {
               <Route path="/travel" element={<TravelPage />} />
               <Route path="/documents" element={<DocumentsPage />} />
               <Route path="/notifications" element={<NotificationsPage />} />
-              <Route path="/reports" element={<ReportsPage />} />
-              <Route path="/audit" element={<AuditPage />} />
-              <Route path="/system" element={<SystemPage />} />
               <Route path="/profile" element={<ProfilePage />} />
             </Route>
           </Route>

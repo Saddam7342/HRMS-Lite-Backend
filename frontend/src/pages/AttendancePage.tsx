@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '../lib/api'
 import type { AttendanceDto, AttendanceListDto } from '../lib/types'
-import { Btn, Card, Input, PageTitle, Alert, Spinner } from '../components/Ui'
+import { Btn, Card, Input, PageTitle, Alert, TableSkeleton } from '../components/Ui'
 import { apiErrorMessage, formatDate, formatTimeSpan, todayISODate } from '../lib/util'
 import { hasRole, useAuth } from '../context/AuthContext'
 
@@ -86,7 +86,7 @@ export default function AttendancePage() {
             <Btn onClick={() => void loadTeam()}>Load</Btn>
           </div>
           {loading ? (
-            <Spinner />
+            <TableSkeleton rows={6} columns={5} />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
@@ -125,7 +125,7 @@ export default function AttendancePage() {
             <Btn onClick={() => void loadRange()}>Load</Btn>
           </div>
           {loading ? (
-            <Spinner />
+            <TableSkeleton rows={6} columns={7} />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">

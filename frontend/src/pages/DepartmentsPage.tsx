@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '../lib/api'
 import type { DepartmentHierarchyDto, DepartmentListDto } from '../lib/types'
-import { Btn, Card, Input, PageTitle, TextArea, Alert, Spinner, Select } from '../components/Ui'
+import { Btn, Card, Input, PageTitle, TextArea, Alert, Select, Skeleton, TableSkeleton, TreeSkeleton } from '../components/Ui'
 import { apiErrorMessage } from '../lib/util'
 import { hasRole, useAuth } from '../context/AuthContext'
 
@@ -170,7 +170,11 @@ export default function DepartmentsPage() {
 
       <Card>
         {loading ? (
-          <Spinner />
+          tab === 'list' ? (
+            <TableSkeleton rows={6} columns={admin ? 6 : 5} />
+          ) : (
+            <TreeSkeleton depth={6} />
+          )
         ) : tab === 'list' ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
@@ -229,7 +233,13 @@ export default function DepartmentsPage() {
             </button>
             <h3 className="mb-4 text-sm font-semibold text-slate-800">Edit department</h3>
             {editLoading ? (
-              <Spinner />
+              <div className="space-y-4" aria-busy>
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
             ) : (
               <form onSubmit={saveEdit} className="space-y-4">
                 <Input label="Name" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} required />

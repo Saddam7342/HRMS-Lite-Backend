@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '../lib/api'
-import { Btn, Card, PageTitle, Alert, Spinner } from '../components/Ui'
+import { Btn, Card, PageTitle, Alert, ListSkeleton } from '../components/Ui'
 import { apiErrorMessage } from '../lib/util'
 
 type Notif = { id: string; title: string; message: string; isRead: boolean; createdAt: string }
@@ -66,7 +66,7 @@ export default function NotificationsPage() {
 
       <Card className="mb-8">
         {loading ? (
-          <Spinner />
+          <ListSkeleton rows={6} />
         ) : (
           <ul className="space-y-3">
             {items.map((n) => (

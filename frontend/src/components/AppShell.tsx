@@ -5,13 +5,10 @@ import {
   Building2,
   ClipboardList,
   FileText,
-  Gauge,
   LayoutDashboard,
   LogOut,
   Plane,
   Receipt,
-  Settings,
-  Shield,
   UserCircle2,
   Users,
 } from 'lucide-react'
@@ -28,9 +25,6 @@ const navMain = [
   { to: '/travel', label: 'Travel', icon: Plane, roles: null },
   { to: '/documents', label: 'Documents', icon: FileText, roles: null },
   { to: '/notifications', label: 'Notifications', icon: Bell, roles: null },
-  { to: '/reports', label: 'Reports', icon: Gauge, roles: ['Admin', 'Manager'] },
-  { to: '/audit', label: 'Audit', icon: Shield, roles: null },
-  { to: '/system', label: 'System', icon: Settings, roles: ['Admin'] },
 ]
 
 function canSee(roles: string[] | null, userRoles: string[]) {

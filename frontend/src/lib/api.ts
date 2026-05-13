@@ -468,61 +468,14 @@ export function updateNotificationPreferences(body: Record<string, boolean>) {
   return request<unknown>('/api/v1/Notifications/preferences', { method: 'PUT', body: JSON.stringify(body) })
 }
 
-// --- Reports
+// --- Reports (dashboard summary only; detailed report endpoints removed from UI)
 
 export function getHrDashboard() {
   return request<HrDashboardDto>('/api/v1/Reports/hr-dashboard')
 }
 
-export function getLeaveReport(start?: string | null, end?: string | null) {
-  const q = new URLSearchParams()
-  if (start) q.set('start', start)
-  if (end) q.set('end', end)
-  const qs = q.toString()
-  return request<unknown>(`/api/v1/Reports/leaves${qs ? `?${qs}` : ''}`)
-}
-
-export function getExpenseReport(start?: string | null, end?: string | null) {
-  const q = new URLSearchParams()
-  if (start) q.set('start', start)
-  if (end) q.set('end', end)
-  const qs = q.toString()
-  return request<unknown>(`/api/v1/Reports/expenses${qs ? `?${qs}` : ''}`)
-}
-
-export function getAttendanceReport(start?: string | null, end?: string | null) {
-  const q = new URLSearchParams()
-  if (start) q.set('start', start)
-  if (end) q.set('end', end)
-  const qs = q.toString()
-  return request<unknown>(`/api/v1/Reports/attendance${qs ? `?${qs}` : ''}`)
-}
-
-// --- Audit
-
-export function getEntityAuditHistory(entityName: string, entityId: string) {
-  return request<unknown[]>(`/api/v1/Audit/entity/${encodeURIComponent(entityName)}/${encodeURIComponent(entityId)}`)
-}
-
-export function getUserAuditActivity(userId: string, limit = 50) {
-  return request<unknown[]>(`/api/v1/Audit/user/${userId}?limit=${limit}`)
-}
-
-export function getSystemAuditLogs(page = 1, pageSize = 50) {
-  return request<unknown[]>(`/api/v1/Audit/logs?page=${page}&pageSize=${pageSize}`)
-}
-
-export function getAuditLog(id: string) {
-  return request<unknown>(`/api/v1/Audit/${id}`)
-}
-
-// --- System
+// --- System (status for admin dashboard card)
 
 export function getSystemStatus() {
   return request<Record<string, unknown>>('/api/v1/System/status')
-}
-
-export function clearSystemCache(prefix?: string | null) {
-  const q = prefix ? `?prefix=${encodeURIComponent(prefix)}` : ''
-  return request<unknown>(`/api/v1/System/cache/clear${q}`, { method: 'POST' })
 }

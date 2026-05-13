@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '../lib/api'
 import type { DocumentDto } from '../lib/types'
-import { Btn, Card, Input, PageTitle, Select, TextArea, Alert, Spinner } from '../components/Ui'
+import { Btn, Card, Input, PageTitle, Select, TextArea, Alert, TableSkeleton } from '../components/Ui'
 import { apiErrorMessage, formatDateTime } from '../lib/util'
 
 export default function DocumentsPage() {
@@ -100,7 +100,7 @@ export default function DocumentsPage() {
       <Card>
         <h3 className="mb-4 text-sm font-semibold text-slate-800">Company documents</h3>
         {loading ? (
-          <Spinner />
+          <TableSkeleton rows={5} columns={6} />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">

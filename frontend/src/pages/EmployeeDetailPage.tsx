@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import * as api from '../lib/api'
 import type { DepartmentListDto, EmployeeListDto, EmployeeProfileDto } from '../lib/types'
-import { Btn, Card, Input, PageTitle, Select, TextArea, Alert, Spinner } from '../components/Ui'
+import { Btn, Card, DetailPageSkeleton, Input, PageTitle, Select, TextArea, Alert } from '../components/Ui'
 import { apiErrorMessage, formatDate } from '../lib/util'
 import { hasRole, useAuth } from '../context/AuthContext'
 
@@ -123,7 +123,7 @@ export default function EmployeeDetailPage() {
       )}
 
       {loading ? (
-        <Spinner />
+        <DetailPageSkeleton />
       ) : profile ? (
         <div className="grid gap-8 lg:grid-cols-2">
           <Card>

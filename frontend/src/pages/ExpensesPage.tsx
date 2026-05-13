@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '../lib/api'
 import type { ExpenseClaimDto, ExpenseClaimListDto } from '../lib/types'
-import { Btn, Card, PageTitle, Alert, Spinner } from '../components/Ui'
+import { Btn, Card, PageTitle, Alert, TableSkeleton } from '../components/Ui'
 import { apiErrorMessage, formatDate, formatDateTime, money } from '../lib/util'
 import { hasRole, useAuth } from '../context/AuthContext'
 
@@ -98,7 +98,7 @@ export default function ExpensesPage() {
             <Card className="mb-8">
               <h3 className="mb-4 text-sm font-semibold text-slate-800">Pending approvals</h3>
               {loading ? (
-                <Spinner />
+                <TableSkeleton rows={5} columns={7} />
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
@@ -144,7 +144,7 @@ export default function ExpensesPage() {
             <Card>
               <h3 className="mb-4 text-sm font-semibold text-slate-800">Team expense claims</h3>
               {loading ? (
-                <Spinner />
+                <TableSkeleton rows={5} columns={6} />
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
@@ -180,6 +180,9 @@ export default function ExpensesPage() {
           {tab === 'org' && hasRole(roles, 'Admin') && (
             <Card>
               <h3 className="mb-4 text-sm font-semibold text-slate-800">All organization expenses</h3>
+              {loading ? (
+                <TableSkeleton rows={6} columns={6} />
+              ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
@@ -206,6 +209,7 @@ export default function ExpensesPage() {
                   </tbody>
                 </table>
               </div>
+              )}
             </Card>
           )}
         </>

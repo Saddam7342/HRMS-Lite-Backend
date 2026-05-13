@@ -27,74 +27,128 @@ public class GetHrDashboardSummaryHandler(
         }
 
         var startOfMonth = new DateTime(dateTimeProvider.UtcNow.Year, dateTimeProvider.UtcNow.Month, 1);
+        var today = dateTimeProvider.UtcNow.Date;
 
-        // 1. Employee Stats
+        // 1. Employee stats — 2 round-trips (aggregates + department distribution) instead of 4+
         var empQuery = unitOfWork.DbContext.Employees.AsNoTracking();
         if (isManagerScoped && managerEmployeeId.HasValue)
             empQuery = empQuery.Where(x => x.ManagerId == managerEmployeeId || x.Id == managerEmployeeId);
 
-        var totalEmployees = await empQuery.CountAsync(cancellationToken);
-        var activeEmployees = await empQuery.CountAsync(x => x.Status == EmployeeStatus.Active, cancellationToken);
-        var newHires = await empQuery.CountAsync(x => x.HireDate >= startOfMonth, cancellationToken);
-        
+        var empAgg = await empQuery
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Total = g.Count(),
+                Active = g.Count(e => e.Status == EmployeeStatus.Active),
+                NewHires = g.Count(e => e.HireDate >= startOfMonth)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var totalEmployees = empAgg?.Total ?? 0;
+        var activeEmployees = empAgg?.Active ?? 0;
+        var newHires = empAgg?.NewHires ?? 0;
+
         var deptDistribution = await empQuery
             .Where(x => x.DepartmentId != null)
             .GroupBy(x => x.Department!.Name)
             .Select(g => new DepartmentDistributionDto(g.Key, g.Count()))
             .ToListAsync(cancellationToken);
 
-        // 2. Leave Stats
+        // 2. Leave stats — 2 round-trips instead of 5
         var leaveQuery = unitOfWork.DbContext.LeaveRequests.AsNoTracking();
         if (isManagerScoped && managerEmployeeId.HasValue)
             leaveQuery = leaveQuery.Where(x => x.Employee.ManagerId == managerEmployeeId);
 
-        var totalLeaves = await leaveQuery.CountAsync(cancellationToken);
-        var pendingLeaves = await leaveQuery.CountAsync(x => x.Status == LeaveRequestStatus.Pending, cancellationToken);
-        var approvedLeaves = await leaveQuery.CountAsync(x => x.Status == LeaveRequestStatus.Approved, cancellationToken);
-        var rejectedLeaves = await leaveQuery.CountAsync(x => x.Status == LeaveRequestStatus.Rejected, cancellationToken);
+        var leaveAgg = await leaveQuery
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Total = g.Count(),
+                Pending = g.Count(x => x.Status == LeaveRequestStatus.Pending),
+                Approved = g.Count(x => x.Status == LeaveRequestStatus.Approved),
+                Rejected = g.Count(x => x.Status == LeaveRequestStatus.Rejected)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var totalLeaves = leaveAgg?.Total ?? 0;
+        var pendingLeaves = leaveAgg?.Pending ?? 0;
+        var approvedLeaves = leaveAgg?.Approved ?? 0;
+        var rejectedLeaves = leaveAgg?.Rejected ?? 0;
 
         var leaveTypeDist = await leaveQuery
             .GroupBy(x => x.LeaveType.Name)
             .Select(g => new LeaveTypeDistributionDto(g.Key, g.Count()))
             .ToListAsync(cancellationToken);
 
-        // 3. Expense Stats
+        // 3. Expense stats — 2 round-trips instead of 4
         var expenseQuery = unitOfWork.DbContext.ExpenseClaims.AsNoTracking();
         if (isManagerScoped && managerEmployeeId.HasValue)
             expenseQuery = expenseQuery.Where(x => x.Employee.ManagerId == managerEmployeeId);
 
-        var totalClaimed = await expenseQuery.SumAsync(x => x.Amount, cancellationToken);
-        var approvedExpenses = await expenseQuery.Where(x => x.Status == ExpenseClaimStatus.Approved).SumAsync(x => x.Amount, cancellationToken);
-        var pendingExpenses = await expenseQuery.Where(x => x.Status == ExpenseClaimStatus.Pending).SumAsync(x => x.Amount, cancellationToken);
+        var expenseAgg = await expenseQuery
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                TotalClaimed = g.Sum(x => x.Amount),
+                Approved = g.Where(x => x.Status == ExpenseClaimStatus.Approved).Sum(x => x.Amount),
+                Pending = g.Where(x => x.Status == ExpenseClaimStatus.Pending).Sum(x => x.Amount)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var totalClaimed = expenseAgg?.TotalClaimed ?? 0;
+        var approvedExpenses = expenseAgg?.Approved ?? 0;
+        var pendingExpenses = expenseAgg?.Pending ?? 0;
 
         var catSpending = await expenseQuery
             .GroupBy(x => x.Category.Name)
             .Select(g => new ExpenseCategorySpendingDto(g.Key, g.Sum(x => x.Amount)))
             .ToListAsync(cancellationToken);
 
-        // 4. Travel Stats
+        // 4. Travel stats — 2 round-trips instead of 4
         var travelQuery = unitOfWork.DbContext.TravelRequests.AsNoTracking();
         if (isManagerScoped && managerEmployeeId.HasValue)
             travelQuery = travelQuery.Where(x => x.Employee.ManagerId == managerEmployeeId);
 
-        var totalTravel = await travelQuery.CountAsync(cancellationToken);
-        var approvedTravel = await travelQuery.CountAsync(x => x.Status == TravelRequestStatus.Approved, cancellationToken);
-        var pendingTravel = await travelQuery.CountAsync(x => x.Status == TravelRequestStatus.Pending, cancellationToken);
+        var travelAgg = await travelQuery
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Total = g.Count(),
+                Approved = g.Count(x => x.Status == TravelRequestStatus.Approved),
+                Pending = g.Count(x => x.Status == TravelRequestStatus.Pending)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var totalTravel = travelAgg?.Total ?? 0;
+        var approvedTravel = travelAgg?.Approved ?? 0;
+        var pendingTravel = travelAgg?.Pending ?? 0;
 
         var destDist = await travelQuery
             .GroupBy(x => x.Destination)
             .Select(g => new TravelDestinationDistributionDto(g.Key, g.Count()))
+            .OrderByDescending(x => x.Count)
             .Take(5)
             .ToListAsync(cancellationToken);
 
-        // 5. Attendance Stats
+        // 5. Attendance stats — 2 round-trips instead of 3 (average is separate: simpler SQL than one grouped mega-query)
         var attendanceQuery = unitOfWork.DbContext.AttendanceRecords.AsNoTracking();
         if (isManagerScoped && managerEmployeeId.HasValue)
             attendanceQuery = attendanceQuery.Where(x => x.Employee.ManagerId == managerEmployeeId);
 
-        var avgHours = await attendanceQuery.Where(x => x.TotalHours > 0).AverageAsync(x => (double?)x.TotalHours, cancellationToken) ?? 0;
-        var lateCount = await attendanceQuery.CountAsync(x => x.IsLate, cancellationToken);
-        var missingCheckout = await attendanceQuery.CountAsync(x => x.CheckOutTime == null && x.Date < dateTimeProvider.UtcNow.Date, cancellationToken);
+        var avgHours = await attendanceQuery.Where(x => x.TotalHours > 0)
+            .AverageAsync(x => (double?)x.TotalHours, cancellationToken) ?? 0;
+
+        var attendanceAgg = await attendanceQuery
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                LateCount = g.Count(x => x.IsLate),
+                MissingCheckout = g.Count(x => x.CheckOutTime == null && x.Date < today)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var lateCount = attendanceAgg?.LateCount ?? 0;
+        var missingCheckout = attendanceAgg?.MissingCheckout ?? 0;
 
         var dashboard = new HrDashboardDto(
             new EmployeeSummaryDto(totalEmployees, activeEmployees, newHires, deptDistribution),

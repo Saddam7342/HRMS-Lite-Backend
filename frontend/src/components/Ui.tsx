@@ -126,6 +126,113 @@ export function Spinner({ className = '' }: { className?: string }) {
   )
 }
 
+/** Base pulse block for loading placeholders */
+export function Skeleton({ className = '' }: { className?: string }) {
+  return <div className={twMerge('animate-pulse rounded-lg bg-slate-200/90', className)} aria-hidden />
+}
+
+export function TableSkeleton({ rows = 6, columns = 5 }: { rows?: number; columns?: number }) {
+  return (
+    <div className="overflow-x-auto" role="status" aria-label="Loading table">
+      <table className="w-full text-left text-sm">
+        <thead>
+          <tr className="border-b border-slate-200">
+            {Array.from({ length: columns }).map((_, i) => (
+              <th key={i} className="pb-3 pr-4">
+                <Skeleton className="h-4 w-24" />
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: rows }).map((_, ri) => (
+            <tr key={ri} className="border-b border-slate-100">
+              {Array.from({ length: columns }).map((_, ci) => (
+                <td key={ci} className="py-3 pr-4">
+                  <Skeleton className="h-4 w-full max-w-[12rem]" />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+/** Stacked rows resembling notification / list cards */
+export function ListSkeleton({ rows = 5 }: { rows?: number }) {
+  return (
+    <ul className="space-y-3" role="status" aria-label="Loading list">
+      {Array.from({ length: rows }).map((_, i) => (
+        <li key={i} className="rounded-xl border border-slate-100 px-4 py-3">
+          <Skeleton className="mb-2 h-4 w-48" />
+          <Skeleton className="mb-2 h-3 w-full max-w-xl" />
+          <Skeleton className="h-3 w-32" />
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+/** Tree / bullet list placeholder */
+export function TreeSkeleton({ depth = 3 }: { depth?: number }) {
+  return (
+    <div className="space-y-2" role="status" aria-label="Loading hierarchy">
+      {Array.from({ length: depth }).map((_, i) => (
+        <div key={i} style={{ marginLeft: i * 12 }}>
+          <Skeleton className="h-4 w-56" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/** Dashboard metric cards grid */
+export function DashboardGridSkeleton({ cards = 5 }: { cards?: number }) {
+  return (
+    <div className="grid gap-6 lg:grid-cols-2" role="status" aria-label="Loading dashboard">
+      {Array.from({ length: cards }).map((_, i) => (
+        <Card key={i}>
+          <Skeleton className="mb-4 h-4 w-28" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-[85%]" />
+            <Skeleton className="h-4 w-[60%]" />
+          </div>
+        </Card>
+      ))}
+    </div>
+  )
+}
+
+/** Employee detail two-column layout */
+export function DetailPageSkeleton() {
+  return (
+    <div className="grid gap-8 lg:grid-cols-2" role="status" aria-label="Loading profile">
+      <Card>
+        <Skeleton className="mb-4 h-4 w-24" />
+        <div className="space-y-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex justify-between gap-4">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 flex-1 max-w-xs" />
+            </div>
+          ))}
+        </div>
+      </Card>
+      <Card>
+        <Skeleton className="mb-4 h-4 w-32" />
+        <div className="space-y-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
+        </div>
+      </Card>
+    </div>
+  )
+}
+
 export function PageTitle({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="mb-8">

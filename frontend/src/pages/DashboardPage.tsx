@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAuth, hasRole } from '../context/AuthContext'
 import * as api from '../lib/api'
 import type { HrDashboardDto } from '../lib/types'
-import { Card, PageTitle, Spinner } from '../components/Ui'
+import { Card, DashboardGridSkeleton, PageTitle, Skeleton } from '../components/Ui'
 import { money } from '../lib/util'
 
 export default function DashboardPage() {
@@ -64,6 +64,12 @@ export default function DashboardPage() {
           <div className="mt-2 text-lg font-semibold text-slate-900">{user?.email}</div>
           <div className="mt-1 text-sm text-slate-500">{(loginHint?.roles ?? roles).join(', ')}</div>
         </Card>
+        {hasRole(roles, 'Admin') && loading && !status && (
+          <Card>
+            <Skeleton className="mb-2 h-3 w-16" />
+            <Skeleton className="h-5 w-36" />
+          </Card>
+        )}
         {hasRole(roles, 'Admin') && status && (
           <Card>
             <div className="text-xs font-medium uppercase tracking-wide text-slate-500">System</div>
@@ -72,14 +78,11 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {loading && (
-        <div className="flex items-center gap-2 text-slate-500">
-          <Spinner /> Loading…
-        </div>
-      )}
       {err && <p className="text-sm text-rose-600">{err}</p>}
 
-      {dash && (
+      {loading && (hasRole(roles, 'Admin') || hasRole(roles, 'Manager')) && <DashboardGridSkeleton cards={5} />}
+
+      {!loading && dash && (
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>
             <h3 className="mb-3 text-sm font-semibold text-slate-800">People</h3>

@@ -20,7 +20,8 @@ public sealed class LoggingBehavior<TRequest, TResponse>(
     {
         var requestName = typeof(TRequest).Name;
 
-        logger.LogInformation("[HRMS] Handling {RequestName} {@Request}", requestName, request);
+        // Avoid serializing full request payloads — large DTOs add CPU/allocations on every API call.
+        logger.LogInformation("[HRMS] Handling {RequestName}", requestName);
 
         try
         {

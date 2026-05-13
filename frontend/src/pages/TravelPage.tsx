@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '../lib/api'
 import type { TeamTravelScheduleDto, TravelRequestDto } from '../lib/types'
-import { Btn, Card, Input, PageTitle, Alert, Spinner } from '../components/Ui'
+import { Btn, Card, Input, PageTitle, Alert, TableSkeleton } from '../components/Ui'
 import { apiErrorMessage, formatDate, money, todayISODate } from '../lib/util'
 import { hasRole, useAuth } from '../context/AuthContext'
 
@@ -94,7 +94,7 @@ export default function TravelPage() {
             <Card className="mb-8">
               <h3 className="mb-4 text-sm font-semibold text-slate-800">Pending approvals</h3>
               {loading ? (
-                <Spinner />
+                <TableSkeleton rows={5} columns={7} />
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
@@ -148,6 +148,9 @@ export default function TravelPage() {
                 <Btn onClick={() => void loadSchedule()}>Load</Btn>
               </div>
               <div className="overflow-x-auto">
+                {loading ? (
+                  <TableSkeleton rows={5} columns={5} />
+                ) : (
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-slate-200 text-slate-500">
@@ -170,6 +173,7 @@ export default function TravelPage() {
                     ))}
                   </tbody>
                 </table>
+                )}
                 {schedule.length === 0 && !loading && (
                   <p className="mt-4 text-sm text-slate-500">No travel in this range.</p>
                 )}
@@ -180,6 +184,9 @@ export default function TravelPage() {
           {tab === 'org' && hasRole(roles, 'Admin') && (
             <Card>
               <h3 className="mb-4 text-sm font-semibold text-slate-800">All organization travel</h3>
+              {loading ? (
+                <TableSkeleton rows={6} columns={5} />
+              ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
@@ -204,6 +211,7 @@ export default function TravelPage() {
                   </tbody>
                 </table>
               </div>
+              )}
             </Card>
           )}
         </>

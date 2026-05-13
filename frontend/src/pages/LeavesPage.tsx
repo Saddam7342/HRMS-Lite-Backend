@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '../lib/api'
 import type { LeaveCalendarDto, LeaveRequestDto } from '../lib/types'
-import { Btn, Card, Input, PageTitle, Alert, Spinner } from '../components/Ui'
+import { Btn, Card, Input, PageTitle, Alert, TableSkeleton } from '../components/Ui'
 import { apiErrorMessage, formatDate, todayISODate } from '../lib/util'
 import { hasRole, useAuth } from '../context/AuthContext'
 
@@ -101,7 +101,7 @@ export default function LeavesPage() {
             <Card className="mb-8">
               <h3 className="mb-4 text-sm font-semibold text-slate-800">Pending approvals</h3>
               {loading ? (
-                <Spinner />
+                <TableSkeleton rows={5} columns={7} />
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
@@ -154,6 +154,9 @@ export default function LeavesPage() {
                 <Btn onClick={() => void reloadCalendar()}>Load</Btn>
               </div>
               <div className="overflow-x-auto">
+                {loading ? (
+                  <TableSkeleton rows={5} columns={5} />
+                ) : (
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-slate-200 text-slate-500">
@@ -176,6 +179,7 @@ export default function LeavesPage() {
                     ))}
                   </tbody>
                 </table>
+                )}
                 {calendar.length === 0 && !loading && (
                   <p className="mt-4 text-sm text-slate-500">No entries in this range.</p>
                 )}
@@ -186,6 +190,9 @@ export default function LeavesPage() {
           {tab === 'org' && hasRole(roles, 'Admin') && (
             <Card>
               <h3 className="mb-4 text-sm font-semibold text-slate-800">All organization leaves</h3>
+              {loading ? (
+                <TableSkeleton rows={6} columns={5} />
+              ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
@@ -210,6 +217,7 @@ export default function LeavesPage() {
                   </tbody>
                 </table>
               </div>
+              )}
             </Card>
           )}
         </>
