@@ -49,9 +49,9 @@ public class GetHrDashboardSummaryHandler(
         var newHires = empAgg?.NewHires ?? 0;
 
         var deptDistribution = await empQuery
-            .Where(x => x.DepartmentId != null)
+            .Where(x => x.DepartmentId != null && x.Department != null)
             .GroupBy(x => x.Department!.Name)
-            .Select(g => new DepartmentDistributionDto(g.Key, g.Count()))
+            .Select(g => new DepartmentDistributionDto(g.Key ?? "Unknown", g.Count()))
             .ToListAsync(cancellationToken);
 
         // 2. Leave stats — 2 round-trips instead of 5
@@ -76,8 +76,9 @@ public class GetHrDashboardSummaryHandler(
         var rejectedLeaves = leaveAgg?.Rejected ?? 0;
 
         var leaveTypeDist = await leaveQuery
+            .Where(x => x.LeaveType != null)
             .GroupBy(x => x.LeaveType.Name)
-            .Select(g => new LeaveTypeDistributionDto(g.Key, g.Count()))
+            .Select(g => new LeaveTypeDistributionDto(g.Key ?? "Unknown", g.Count()))
             .ToListAsync(cancellationToken);
 
         // 3. Expense stats — 2 round-trips instead of 4
@@ -100,9 +101,11 @@ public class GetHrDashboardSummaryHandler(
         var pendingExpenses = expenseAgg?.Pending ?? 0;
 
         var catSpending = await expenseQuery
+            .Where(x => x.Category != null)
             .GroupBy(x => x.Category.Name)
-            .Select(g => new ExpenseCategorySpendingDto(g.Key, g.Sum(x => x.Amount)))
+            .Select(g => new ExpenseCategorySpendingDto(g.Key ?? "Unknown", g.Sum(x => x.Amount)))
             .ToListAsync(cancellationToken);
+
 
         // 4. Travel stats — 2 round-trips instead of 4
         var travelQuery = unitOfWork.DbContext.TravelRequests.AsNoTracking();
