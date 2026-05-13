@@ -1,5 +1,6 @@
 using FluentValidation;
 using HRMS.Application.Common.Interfaces;
+using HRMS.Application.Features.Leaves;
 using HRMS.Domain.Entities;
 using HRMS.Domain.Enums;
 using HRMS.Shared.Models;
@@ -27,8 +28,7 @@ public class CreateLeaveRequestValidator : AbstractValidator<CreateLeaveRequestC
 
 public class CreateLeaveRequestHandler(
     IUnitOfWork unitOfWork,
-    ICurrentUserService currentUserService,
-    IDateTimeProvider dateTimeProvider) : IRequestHandler<CreateLeaveRequestCommand, Result<Guid>>
+    ICurrentUserService currentUserService) : IRequestHandler<CreateLeaveRequestCommand, Result<Guid>>
 {
     public async Task<Result<Guid>> Handle(CreateLeaveRequestCommand request, CancellationToken cancellationToken)
     {
@@ -37,6 +37,14 @@ public class CreateLeaveRequestHandler(
 
         var employee = await unitOfWork.Employees.GetByUserIdAsync(userId.Value, cancellationToken);
         if (employee == null) return Result<Guid>.Failure("Employee profile not found.");
+
+        var (startUtc, endUtc) = NormalizeLeaveDateRange(request.StartDate, request.EndDate);
+        if (endUtc < startUtc)
+            return Result<Guid>.Failure("End date must be on or after start date.");
+
+        var balanceYear = startUtc.Year;
+        await LeaveBalanceInitializer.EnsureForEmployeeYearAsync(
+            unitOfWork, employee.Id, employee.Gender, balanceYear, cancellationToken);
 
         var leaveType = await unitOfWork.LeaveTypes.GetByIdAsync(request.LeaveTypeId, cancellationToken);
         if (leaveType == null || !leaveType.IsActive)
@@ -47,14 +55,13 @@ public class CreateLeaveRequestHandler(
             return Result<Guid>.Failure($"This leave type is only applicable for {leaveType.ApplicableGender} employees.");
 
         // 2. Overlap Check
-        if (await unitOfWork.LeaveRequests.HasOverlappingLeaveAsync(employee.Id, request.StartDate, request.EndDate, null, cancellationToken))
+        if (await unitOfWork.LeaveRequests.HasOverlappingLeaveAsync(employee.Id, startUtc, endUtc, null, cancellationToken))
             return Result<Guid>.Failure("You already have an overlapping leave request for these dates.");
 
         // 3. Balance Check
-        var currentYear = dateTimeProvider.UtcNow.Year;
-        var balance = await unitOfWork.LeaveBalances.GetByEmployeeAndTypeAsync(employee.Id, request.LeaveTypeId, currentYear, cancellationToken);
-        
-        var totalDays = (decimal)(request.EndDate - request.StartDate).TotalDays + 1;
+        var balance = await unitOfWork.LeaveBalances.GetByEmployeeAndTypeAsync(employee.Id, request.LeaveTypeId, balanceYear, cancellationToken);
+
+        var totalDays = (decimal)(endUtc - startUtc).TotalDays + 1;
         if (balance == null || balance.RemainingDays < totalDays)
             return Result<Guid>.Failure("Insufficient leave balance.");
 
@@ -63,8 +70,8 @@ public class CreateLeaveRequestHandler(
         {
             EmployeeId = employee.Id,
             LeaveTypeId = request.LeaveTypeId,
-            StartDate = request.StartDate,
-            EndDate = request.EndDate,
+            StartDate = startUtc,
+            EndDate = endUtc,
             TotalDays = totalDays,
             Reason = request.Reason,
             Status = LeaveRequestStatus.Pending
@@ -74,5 +81,18 @@ public class CreateLeaveRequestHandler(
         await unitOfWork.CommitAsync(cancellationToken);
 
         return Result<Guid>.Success(leaveRequest.Id);
+    }
+
+    private static (DateTime StartUtc, DateTime EndUtc) NormalizeLeaveDateRange(DateTime start, DateTime end)
+    {
+        static DateTime ToUtcDate(DateTime d)
+        {
+            var utc = d.Kind == DateTimeKind.Unspecified
+                ? DateTime.SpecifyKind(d, DateTimeKind.Utc)
+                : d.ToUniversalTime();
+            return DateTime.SpecifyKind(utc.Date, DateTimeKind.Utc);
+        }
+
+        return (ToUtcDate(start), ToUtcDate(end));
     }
 }

@@ -191,6 +191,33 @@ public static class IdentitySeeder
             IsActive = true,
         });
         await context.SaveChangesAsync();
+
+        await SeedLeaveBalancesForAdminAsync(context, user.Id);
+    }
+
+    private static async Task SeedLeaveBalancesForAdminAsync(AppDbContext context, Guid userId)
+    {
+        var employee = await context.Employees.FirstOrDefaultAsync(e => e.UserId == userId);
+        if (employee == null) return;
+
+        var currentYear = DateTime.UtcNow.Year;
+        var leaveTypes = await context.LeaveTypes.ToListAsync();
+
+        foreach (var lt in leaveTypes)
+        {
+            if (!await context.LeaveBalances.AnyAsync(b => b.EmployeeId == employee.Id && b.LeaveTypeId == lt.Id && b.Year == currentYear))
+            {
+                context.LeaveBalances.Add(new LeaveBalance
+                {
+                    EmployeeId = employee.Id,
+                    LeaveTypeId = lt.Id,
+                    TotalDays = lt.DefaultDays,
+                    UsedDays = 0,
+                    Year = currentYear
+                });
+            }
+        }
+        await context.SaveChangesAsync();
     }
 
     // ---------------------------------------------------------------

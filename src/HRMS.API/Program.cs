@@ -29,6 +29,8 @@ builder.Host.UseSerilog();
 
 // --- Add Layers ---
 builder.Services.AddApplication();
+builder.Services.Configure<HRMS.Application.Common.Configuration.AuthSettings>(
+    builder.Configuration.GetSection(HRMS.Application.Common.Configuration.AuthSettings.SectionName));
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddPersistence(builder.Configuration);
 

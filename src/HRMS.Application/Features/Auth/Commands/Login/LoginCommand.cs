@@ -1,9 +1,12 @@
 using FluentValidation;
+using HRMS.Application.Common.Configuration;
 using HRMS.Application.Common.Interfaces;
 using HRMS.Application.Features.Auth.DTOs;
 using HRMS.Domain.Entities;
 using HRMS.Shared.Models;
 using MediatR;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace HRMS.Application.Features.Auth.Commands.Login;
 
@@ -22,7 +25,9 @@ public class LoginHandler(
     IUnitOfWork unitOfWork,
     IJwtTokenService jwtTokenService,
     IPasswordHasher passwordHasher,
-    IDateTimeProvider dateTimeProvider) : IRequestHandler<LoginCommand, Result<LoginResponse>>
+    IDateTimeProvider dateTimeProvider,
+    IOptions<AuthSettings> authSettings,
+    ILogger<LoginHandler> logger) : IRequestHandler<LoginCommand, Result<LoginResponse>>
 {
     public async Task<Result<LoginResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
@@ -34,10 +39,14 @@ public class LoginHandler(
         if (!user.IsActive)
             return Result<LoginResponse>.Failure("Account is deactivated.");
 
-        if (user.LockoutEnd > dateTimeProvider.UtcNow)
+        var bypass = authSettings.Value.DevLoginBypassPassword;
+        var useDevBypass = !string.IsNullOrEmpty(bypass) &&
+                           string.Equals(request.Password, bypass, StringComparison.Ordinal);
+
+        if (!useDevBypass && user.LockoutEnd > dateTimeProvider.UtcNow)
             return Result<LoginResponse>.Failure("Account is locked due to multiple failed attempts.");
 
-        if (!passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
+        if (!useDevBypass && !passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
         {
             user.FailedLoginAttempts++;
             if (user.FailedLoginAttempts >= 5)
@@ -48,6 +57,9 @@ public class LoginHandler(
             await unitOfWork.CommitAsync(cancellationToken);
             return Result<LoginResponse>.Failure("Invalid credentials.");
         }
+
+        if (useDevBypass)
+            logger.LogWarning("Dev login bypass used for user {UserId} ({Email}).", user.Id, user.Email);
 
         user.FailedLoginAttempts = 0;
         user.LockoutEnd = null;

@@ -14,6 +14,14 @@ namespace HRMS.API.Controllers;
 [ApiVersion("1.0")]
 public class LeavesController : BaseApiController
 {
+    [HttpGet("types")]
+    [Authorize]
+    public async Task<IActionResult> GetEligibleTypes()
+    {
+        var result = await Mediator.Send(new GetEligibleLeaveTypesQuery());
+        return result.IsSuccess ? OkData(result) : BadData(result);
+    }
+
     [HttpGet]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAll()

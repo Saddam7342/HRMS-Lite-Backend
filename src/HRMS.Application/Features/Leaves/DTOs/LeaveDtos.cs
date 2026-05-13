@@ -25,6 +25,15 @@ public record LeaveBalanceDto(
     decimal RemainingDays,
     int Year);
 
+/// <summary>Active leave types the current employee may apply for (gender rules applied).</summary>
+public record LeaveTypeOptionDto(
+    Guid Id,
+    string Name,
+    string Code,
+    int DefaultDays,
+    bool IsGenderSpecific,
+    Gender? ApplicableGender);
+
 public record LeaveCalendarDto(
     Guid Id,
     Guid EmployeeId,

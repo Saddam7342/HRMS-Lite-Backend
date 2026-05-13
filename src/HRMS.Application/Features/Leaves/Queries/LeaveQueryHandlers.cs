@@ -1,5 +1,6 @@
 using AutoMapper;
 using HRMS.Application.Common.Interfaces;
+using HRMS.Application.Features.Leaves;
 using HRMS.Application.Features.Leaves.DTOs;
 using HRMS.Domain.Enums;
 using HRMS.Shared.Models;
@@ -57,8 +58,11 @@ public class LeaveQueryHandlers(
         if (employee == null) return Result<IReadOnlyList<LeaveBalanceDto>>.Failure("Employee not found.");
 
         var year = request.Year ?? dateTimeProvider.UtcNow.Year;
+        await LeaveBalanceInitializer.EnsureForEmployeeYearAsync(
+            unitOfWork, employee.Id, employee.Gender, year, cancellationToken);
+
         var balances = await unitOfWork.LeaveBalances.GetByEmployeeAsync(employee.Id, year, cancellationToken);
-        
+
         return Result<IReadOnlyList<LeaveBalanceDto>>.Success(mapper.Map<List<LeaveBalanceDto>>(balances));
     }
 
