@@ -6,7 +6,7 @@ namespace HRMS.API.Middleware;
 
 public class RateLimitingMiddleware(RequestDelegate next, IMemoryCache cache)
 {
-    private const int Limit = 100; // Requests
+    private const int Limit = 500; // Requests
     private const int PeriodSeconds = 60; // Per minute
 
     public async Task InvokeAsync(HttpContext context)

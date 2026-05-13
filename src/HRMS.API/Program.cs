@@ -190,9 +190,8 @@ using (var scope = app.Services.CreateScope())
 // --- Middleware Pipeline ---
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<CorrelationIdMiddleware>();
-app.UseMiddleware<RateLimitingMiddleware>();
-
 app.UseCors("AllowAll");
+app.UseMiddleware<RateLimitingMiddleware>();
 
 var showSwagger = builder.Configuration.GetValue<bool>("ShowSwagger", defaultValue: false);
 if (app.Environment.IsDevelopment() || showSwagger)
