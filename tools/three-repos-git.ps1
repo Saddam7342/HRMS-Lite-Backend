@@ -3,6 +3,9 @@
 #   HRMS-Admin-frontend-Web   — Vite + React admin UI
 #   HRMS-Employee-Mobile      — Expo employee app
 #
+# If a leftover HRMS\frontend\node_modules folder could not be deleted (file locks),
+# stop any Vite/Node process using it, then remove HRMS\frontend manually.
+#
 # Create empty GitHub repositories (via web UI or gh CLI), then push each folder:
 #
 #   cd "$env:USERPROFILE\Documents\HRMS-Admin-frontend-Web"
